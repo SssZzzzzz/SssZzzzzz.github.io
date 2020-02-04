@@ -82,7 +82,7 @@
   <entry>
     <title>java集合之HashMap源码分析</title>
     <url>/Jsava/java%E9%9B%86%E5%90%88%E4%B9%8BHashMap/</url>
-    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>HashMap 和 HashSet 是 Java Collection Framework 的两个重要成员，其中 HashMap 是 Map 接口的常用实现类，HashSet 是 Set 接口的常用实现类。虽然 HashMap 和 HashSet 实现的接口规范不同，但它们底层的 Hash 存储机制完全一样，甚至 HashSet 本身就采用 HashMap 来实现的。</p>
+    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>HashMap 作为一种非常非常常用的数据结果，几乎每天都要见面，今天安排他一下!</p>
 <a id="more"></a>
 <h1 id="HashMap存储的实现"><a href="#HashMap存储的实现" class="headerlink" title="HashMap存储的实现"></a>HashMap存储的实现</h1><p>当我们新new一个HashMap，并将多个key-value放入HashMap</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">HashMap&lt;String , String&gt; map &#x3D; new HashMap&lt;String , String&gt;();</span><br><span class="line">map.put(&quot;王思聪&quot; , &quot;有钱&quot;);</span><br><span class="line">map.put(&quot;姚明&quot; , &quot;个子高&quot;);   </span><br><span class="line">map.put(&quot;SZ&quot; , &quot;很帅&quot;);</span><br></pre></td></tr></table></figure>
