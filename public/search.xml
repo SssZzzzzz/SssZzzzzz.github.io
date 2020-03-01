@@ -1,6 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>深度优先搜索与广度优先搜索</title>
+    <url>/Java/%E6%B7%B1%E5%BA%A6%E4%BC%98%E5%85%88%E6%90%9C%E7%B4%A2%E4%B8%8E%E5%B9%BF%E5%BA%A6%E4%BC%98%E5%85%88%E6%90%9C%E7%B4%A2/</url>
+    <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>（1）图的表示方法：邻接矩阵（二维数组）、邻接表（链表数组【链表的链表】）。</p>
+<p>（2）图的搜索方法：深度优先搜索（DFS）和广度优先搜索（BFS）。</p>
+<a id="more"></a>
+<h1 id="图的深度优先搜索"><a href="#图的深度优先搜索" class="headerlink" title="图的深度优先搜索"></a>图的深度优先搜索</h1><p>（1）用栈记录下一步的走向。访问一个顶点的过程中要做三件事：</p>
+<pre><code>       ①访问顶点
+
+       ②顶点入栈，以便记住它
+
+       ③标记顶点，以便不会再访问它
+
+（2）访问规则：
+
+        a.如果可能，访问一个邻接的未访问顶点，标记它，并入栈。
+
+        b.当不能执行a时（没有邻接的未访问顶点），如果栈不为空，就从栈中弹出一个顶点。
+
+        c.如果不能执行规则a和b，就完成了整个搜索过程。
+
+（3）实现：基于以上规则，循环执行，直到栈为空。每次循环各种，它做四件事：
+
+       ①用peek()方法检查栈顶的顶点。
+
+       ②试图找到这个顶点还未访问的邻接点。
+
+       ③如果没有找到，出栈。
+
+       ④如果找到这样的顶点，访问并入栈。</code></pre><p><img src="/images/dfs.jpg" alt="alt"></p>
+<p>比如，采用dfs遍历上图，从A点出发，遍历结果（入栈顺序）为：ABCDE。</p>
+<h1 id="图的广度优先搜索"><a href="#图的广度优先搜索" class="headerlink" title="图的广度优先搜索"></a>图的广度优先搜索</h1><p> （1）用队列记录下一步的走向。深度优先搜素表现的好像是尽快远离起点似的，相反，广度优先搜索中，算法好像要尽可能靠近起始点。</p>
+<pre><code>（2）访问规则：
+
+        a.访问下一个未访问的邻接点（如果存在），这个顶点必须是当前顶点的邻接点，标记它，并入队列。
+
+        b.如果因为已经没有未访问顶点而不能执行规则a，那么从队列头取一个顶点（如果存在），并使其成为当前顶点。
+
+        c.如果因为队列为空而不能执行规则b，则完成了整个搜索过程。
+
+（3）实现：基于以上规则，对下图做bfs遍历，其队列的变化如下表所示：</code></pre><p><img src="/images/bfs.jpg" alt="alt"></p>
+<p><img src="/images/bfs1.jpg" alt="alt"><br>   从而，遍历的结果（入队顺序）为ABCDEFGHI。如果采用bfs遍历3中的图，结果为：ABDCE。</p>
+<pre><code>（4）特性：广度优先搜索首先找到与起始点相距一条边的所有顶点，然后是与起始点相距两条边的顶点，以此类推。如果要寻找起始顶点到指定顶点的最短距离，那么这个属性非常有用。首先执行BFS，当找到指定顶点时，就可以说这条路径是到这个顶点的最短路径。如果有更短的路径，BFS算法就应该已经找到它了。</code></pre><h1 id="Java实现"><a href="#Java实现" class="headerlink" title="Java实现"></a>Java实现</h1><p>DFS、BFS的代码实现如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">public class Graph &#123;</span><br><span class="line">	private final int MAX_VERTS &#x3D; 20;</span><br><span class="line">	private Vertex vertexList[];&#x2F;&#x2F; 顶点数组</span><br><span class="line">	private int adjMat[][];&#x2F;&#x2F; 邻接矩阵</span><br><span class="line">	private int nVerts;&#x2F;&#x2F; 当前顶点总数</span><br><span class="line">	private StackX theStack;</span><br><span class="line">	private Queue theQueue;</span><br><span class="line"> </span><br><span class="line">	public static void main(String[] args) &#123;</span><br><span class="line">		Graph theGraph &#x3D; new Graph();</span><br><span class="line">		theGraph.addVertex(&#39;A&#39;);</span><br><span class="line">		theGraph.addVertex(&#39;B&#39;);</span><br><span class="line">		theGraph.addVertex(&#39;C&#39;);</span><br><span class="line">		theGraph.addVertex(&#39;D&#39;);</span><br><span class="line">		theGraph.addVertex(&#39;E&#39;);</span><br><span class="line"> </span><br><span class="line">		theGraph.addEdge(0, 1);</span><br><span class="line">		theGraph.addEdge(1, 2);</span><br><span class="line">		theGraph.addEdge(0, 3);</span><br><span class="line">		theGraph.addEdge(3, 4);</span><br><span class="line"> </span><br><span class="line">		System.out.print(&quot;visits:&quot;);</span><br><span class="line">		&#x2F;&#x2F; theGraph.dfs();</span><br><span class="line">		theGraph.bfs();</span><br><span class="line">		System.out.println();</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	public Graph() &#123;&#x2F;&#x2F; 构造图</span><br><span class="line">		vertexList &#x3D; new Vertex[MAX_VERTS];</span><br><span class="line"> </span><br><span class="line">		adjMat &#x3D; new int[MAX_VERTS][MAX_VERTS];</span><br><span class="line">		nVerts &#x3D; 0;</span><br><span class="line">		for (int i &#x3D; 0; i &lt; MAX_VERTS; i++) &#123;</span><br><span class="line">			for (int j &#x3D; 0; j &lt; MAX_VERTS; j++) &#123;</span><br><span class="line">				adjMat[i][j] &#x3D; 0;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		theStack &#x3D; new StackX();</span><br><span class="line">		theQueue &#x3D; new Queue();</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	public void addVertex(char lab) &#123;&#x2F;&#x2F; 添加顶点</span><br><span class="line">		vertexList[nVerts++] &#x3D; new Vertex(lab);</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	public void addEdge(int start, int end) &#123;&#x2F;&#x2F; 添加边</span><br><span class="line">		adjMat[start][end] &#x3D; 1;</span><br><span class="line">		adjMat[end][start] &#x3D; 1;</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	public void displayVertex(int v) &#123;&#x2F;&#x2F; 打印数组中v位置下的顶点名</span><br><span class="line">		System.out.print(vertexList[v].lable);</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	public int getAdjUnvisitedVertex(int v) &#123;&#x2F;&#x2F; 获取和v邻接的未访问的顶点</span><br><span class="line">		for (int i &#x3D; 0; i &lt; nVerts; i++) &#123;</span><br><span class="line">			if (adjMat[v][i] &#x3D;&#x3D; 1 &amp;&amp; vertexList[i].wasVisited &#x3D;&#x3D; false) &#123;</span><br><span class="line">				return i;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		return -1;</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	public void dfs() &#123;&#x2F;&#x2F; 深度优先搜索</span><br><span class="line">		vertexList[0].wasVisited &#x3D; true;</span><br><span class="line">		displayVertex(0);</span><br><span class="line">		theStack.push(0);</span><br><span class="line"> </span><br><span class="line">		while (!theStack.isEmpty()) &#123;</span><br><span class="line">			int v &#x3D; getAdjUnvisitedVertex(theStack.peek());</span><br><span class="line">			if (v &#x3D;&#x3D; -1) &#123;</span><br><span class="line">				theStack.pop();</span><br><span class="line">			&#125; else &#123;</span><br><span class="line">				vertexList[v].wasVisited &#x3D; true;</span><br><span class="line">				displayVertex(v);</span><br><span class="line">				theStack.push(v);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"> </span><br><span class="line">		for (int i &#x3D; 0; i &lt; nVerts; i++) &#123;</span><br><span class="line">			vertexList[i].wasVisited &#x3D; false;&#x2F;&#x2F; 重置，防止后边再次使用dfs</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	public void bfs() &#123;&#x2F;&#x2F; 广度优先搜索</span><br><span class="line">		vertexList[0].wasVisited &#x3D; true;</span><br><span class="line">		displayVertex(0);</span><br><span class="line">		theQueue.insert(0);</span><br><span class="line">		int v2;</span><br><span class="line"> </span><br><span class="line">		while (!theQueue.isEmpty()) &#123;</span><br><span class="line">			int v1 &#x3D; theQueue.remove();</span><br><span class="line"> </span><br><span class="line">			while ((v2 &#x3D; getAdjUnvisitedVertex(v1)) !&#x3D; -1) &#123;</span><br><span class="line">				vertexList[v2].wasVisited &#x3D; true;</span><br><span class="line">				displayVertex(v2);</span><br><span class="line">				theQueue.insert(v2);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"> </span><br><span class="line">		for (int j &#x3D; 0; j &lt; nVerts; j++) &#123;</span><br><span class="line">			vertexList[j].wasVisited &#x3D; false;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">class StackX &#123;&#x2F;&#x2F; 自定义栈</span><br><span class="line">	private final int SIZE &#x3D; 20;</span><br><span class="line">	private int[] st;</span><br><span class="line">	private int top;</span><br><span class="line"> </span><br><span class="line">	public StackX() &#123;</span><br><span class="line">		st &#x3D; new int[SIZE];</span><br><span class="line">		top &#x3D; -1;</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	public void push(int j) &#123;</span><br><span class="line">		st[++top] &#x3D; j;</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	public int pop() &#123;</span><br><span class="line">		if (top &#x3D;&#x3D; 0) &#123;</span><br><span class="line">			return -1;</span><br><span class="line">		&#125;</span><br><span class="line">		return st[--top];</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	public int peek() &#123;</span><br><span class="line">		return st[top];</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	public boolean isEmpty() &#123;</span><br><span class="line">		return (top &#x3D;&#x3D; -1);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">class Queue &#123;</span><br><span class="line">	private final int SIZE &#x3D; 20;</span><br><span class="line">	private int[] queArray;</span><br><span class="line">	private int front;</span><br><span class="line">	private int rear;</span><br><span class="line"> </span><br><span class="line">	public Queue() &#123;</span><br><span class="line">		queArray &#x3D; new int[SIZE];</span><br><span class="line">		front &#x3D; 0;</span><br><span class="line">		rear &#x3D; -1;</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	public void insert(int j) &#123;&#x2F;&#x2F; 入队</span><br><span class="line">		if (rear &#x3D;&#x3D; SIZE - 1) &#123;</span><br><span class="line">			rear &#x3D; -1;</span><br><span class="line">		&#125;</span><br><span class="line">		queArray[++rear] &#x3D; j;</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	public int remove() &#123;&#x2F;&#x2F; 出队</span><br><span class="line">		if (!isEmpty()) &#123;</span><br><span class="line">			return queArray[front++];</span><br><span class="line">		&#125; else &#123;</span><br><span class="line">			return -1;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	public boolean isEmpty() &#123;</span><br><span class="line">		return (rear + 1 &#x3D;&#x3D; front);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">class Vertex &#123;</span><br><span class="line">	public char lable;&#x2F;&#x2F; 名字</span><br><span class="line">	public boolean wasVisited;</span><br><span class="line"> </span><br><span class="line">	public Vertex(char lab) &#123;</span><br><span class="line">		lable &#x3D; lab;</span><br><span class="line">		wasVisited &#x3D; false;</span><br><span class="line">	&#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>输出：</p>
+<p>visits:ABDCE</p>
+]]></content>
+      <categories>
+        <category>Java</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>java集合之HashMap源码分析</title>
     <url>/Java/java%E9%9B%86%E5%90%88%E4%B9%8BHashMap/</url>
     <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>HashMap 作为一种非常非常常用的数据结构，几乎每天都要见面，今天就安排他一下!</p>
