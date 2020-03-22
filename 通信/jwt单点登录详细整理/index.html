@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('http://sunze.ltd').hostname,
+    root: '/',
+    scheme: 'Muse',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'public/search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="前言工作以来接触过两次sso单点登录，一次基于spring security，最近的一次基于jwt。感觉最大的问题就是有时候编程思路不太清晰就开始动手coding，总是蒙蒙的。参与了两次关于登录流程的设计，实在是不应该对这里再糊里糊涂了。痛定思痛，详细整理一下普通的会话管理和基于jwt的单点登录。(由于涉及到工作内容，以下就不用之前的源码展示了) 补充：下文会话管理部分图片为手绘，jwt相关图片来">
+<meta property="og:type" content="article">
+<meta property="og:title" content="jwt单点登录详细整理">
+<meta property="og:url" content="http://sunze.ltd/%E9%80%9A%E4%BF%A1/jwt%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95%E8%AF%A6%E7%BB%86%E6%95%B4%E7%90%86/index.html">
+<meta property="og:site_name" content="sunze.ltd">
+<meta property="og:description" content="前言工作以来接触过两次sso单点登录，一次基于spring security，最近的一次基于jwt。感觉最大的问题就是有时候编程思路不太清晰就开始动手coding，总是蒙蒙的。参与了两次关于登录流程的设计，实在是不应该对这里再糊里糊涂了。痛定思痛，详细整理一下普通的会话管理和基于jwt的单点登录。(由于涉及到工作内容，以下就不用之前的源码展示了) 补充：下文会话管理部分图片为手绘，jwt相关图片来">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://sunze.ltd/images/server-session.png">
+<meta property="og:image" content="http://sunze.ltd/images/cookie-based.png">
+<meta property="og:image" content="http://sunze.ltd/images/token-based.png">
+<meta property="og:image" content="http://sunze.ltd/images/jwt1.png">
+<meta property="og:image" content="http://sunze.ltd/images/jwt2.png">
+<meta property="og:image" content="http://sunze.ltd/images/jwt3.png">
+<meta property="og:image" content="http://sunze.ltd/images/jwt5.png">
+<meta property="og:image" content="http://sunze.ltd/images/jwt6.png">
+<meta property="og:image" content="http://sunze.ltd/images/jwt7.png">
+<meta property="og:image" content="http://sunze.ltd/images/sso1.png">
+<meta property="og:image" content="http://sunze.ltd/images/sso2.png">
+<meta property="og:image" content="http://sunze.ltd/images/sso3.png">
+<meta property="og:image" content="http://sunze.ltd/images/sso4.png">
+<meta property="og:image" content="http://sunze.ltd/images/sso5.png">
+<meta property="article:published_time" content="2020-03-22T08:45:47.000Z">
+<meta property="article:modified_time" content="2020-03-22T08:41:24.283Z">
+<meta property="article:author" content="且听风雨">
+<meta property="article:tag" content="java">
+<meta property="article:tag" content="框架">
+<meta property="article:tag" content="网络">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://sunze.ltd/images/server-session.png">
+
+<link rel="canonical" href="http://sunze.ltd/%E9%80%9A%E4%BF%A1/jwt%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95%E8%AF%A6%E7%BB%86%E6%95%B4%E7%90%86/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>jwt单点登录详细整理 | sunze.ltd</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">sunze.ltd</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://sunze.ltd/%E9%80%9A%E4%BF%A1/jwt%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95%E8%AF%A6%E7%BB%86%E6%95%B4%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="且听风雨">
+      <meta itemprop="description" content="我要的简单">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="sunze.ltd">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          jwt单点登录详细整理
+        </h1>
+
+        <div class="post-meta">
+
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-03-22 16:45:47 / 修改时间：16:41:24" itemprop="dateCreated datePublished" datetime="2020-03-22T16:45:47+08:00">2020-03-22</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E9%80%9A%E4%BF%A1/" itemprop="url" rel="index">
+                    <span itemprop="name">通信</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/%E9%80%9A%E4%BF%A1/jwt%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95%E8%AF%A6%E7%BB%86%E6%95%B4%E7%90%86/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/%E9%80%9A%E4%BF%A1/jwt%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95%E8%AF%A6%E7%BB%86%E6%95%B4%E7%90%86/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>工作以来接触过两次sso单点登录，一次基于spring security，最近的一次基于jwt。感觉最大的问题就是有时候编程思路不太清晰就开始动手coding，总是蒙蒙的。参与了两次关于登录流程的设计，实在是不应该对这里再糊里糊涂了。痛定思痛，详细整理一下普通的会话管理和基于jwt的单点登录。(由于涉及到工作内容，以下就不用之前的源码展示了)</p>
+<p>补充：下文会话管理部分图片为手绘，jwt相关图片来源于网络。</p>
+<a id="more"></a>
+<h1 id="会话管理"><a href="#会话管理" class="headerlink" title="会话管理"></a>会话管理</h1><p>在说jwt之前先说一下常用的会话管理  </p>
+<ul>
+<li><p>基于server-session的管理方式</p>
+</li>
+<li><p>cookie-based的管理方式</p>
+</li>
+<li><p>token-based的管理方式</p>
+<ul>
+<li><p><strong>基于server-session的管理</strong></p>
+</li>
+<li><p>(1).服务端session是用户第一次访问应用时，服务器就会创建的对象，代表用户的一次会话过程，服务器为每一个session都分配一个唯一的sessionid，以保证每个用户都有一个不同的session对象。</p>
+</li>
+<li><p>(2).服务器在创建完session后，会把sessionid通过cookie返回给用户所在的浏览器，这样当用户第二次及以后向服务器发送请求的时候，就会通过cookie把sessionid传回给服务器，以便服务器能够根据sessionid找到与该用户对应的session对象。</p>
+</li>
+<li><p>(3).session通常有失效时间的设定，比如2个小时。当失效时间到，服务器会销毁之前的session，并创建新的session返回给用户。但是只要用户在失效时间内，有发送新的请求给服务器，通常服务器都会把他对应的session的失效时间根据当前的请求时间再延长2个小时。</p>
+</li>
+<li><p>(4).session在一开始并不具备会话管理的作用。它只有在用户登录认证成功之后，并且往session对象里面放入了用户登录成功的凭证，才能用来管理会话。管理会话的逻辑也很简单，只要拿到用户的session对象，看它里面有没有登录成功的凭证，就能判断这个用户是否已经登录。当用户主动退出的时候，会把它的session对象里的登录凭证清掉。所以在用户登录前或退出后或者session对象失效时，肯定都是拿不到需要的登录凭证的。</p>
+<p>以上过程可简单使用流程图描述如下：<br><img src="/images/server-session.png" alt="alt"></p>
+<p>该种会话管理方式的优点:个人理解主要就是安全性比较高，因为在浏览器端与服务器端保持会话状态的媒介始终只是一个sessionid串，只要这个串够随机，攻击者就不能轻易冒充他人的sessionid进行操作；除非通过CSRF或http劫持的方式，才有可能冒充别人进行操作；即使冒充成功，也必须被冒充的用户session里面包含有效的登录凭证才行。<br>当然结合这两次的相关开发经验，此种方式也暴露了相当一部分缺点：</p>
+<ul>
+<li>(1).这种方式将会话信息存储在web服务器里面，所以在用户同时在线量比较多时，这些会话信息会占据比较多的内存。</li>
+<li>(2).当应用采用集群部署的时候，会遇到多台web服务器之间如何做session共享的问题。因为session是由单个服务器创建的，但是处理用户请求的服务器不一定是那个创建session的服务器，这样他就拿不到之前已经放入到session中的登录凭证之类的信息了</li>
+<li>(3).多个应用要共享session时，除了以上问题，还会遇到跨域问题，因为不同的应用可能部署的主机不一样，需要在各个应用做好cookie跨域的处理。</li>
+</ul>
+<p>针对问题1和问题2，可以采用redis这种中间服务器来管理session的增删改查，一来减轻web服务器的负担，二来解决不同web服务器共享session的问题。针对问题3，我个人所在的项目是通过生成token来实现的，在跳转系统时将token作为参数传给其它系统(同样需要跨域！！！但无需增加处理逻辑)，然后解析，借此实现多个应用共享同一用户不同系统登陆状态。至于其他方面我这里并不知道什么太好的处理…也欢迎各位同行指点探讨。</p>
+</li>
+<li><p><strong>cookie-based的管理方式</strong></p>
+<p>当用户登录成功之后，把登录凭证写到cookie里面，并给cookie设置有效期，后续请求直接验证存有登录凭证的cookie是否存在以及凭证是否有效，即可判断用户的登录状态。使用该种方式相比于第一种方式减轻了服务器的处理逻辑和复杂程度。使用它来实现会话管理的整体流程如下：</p>
+</li>
+<li><p>(1).用户发起登录请求，服务端根据传入的用户密码之类的身份信息，验证用户是否满足登录条件，如果满足，就根据用户信息创建一个登录凭证，这个登录凭证简单来说就是一个对象，最简单的形式可以只包含用户id，凭证创建时间和过期时间三个值。</p>
+</li>
+<li><p>(2).服务端把上一步创建好的登录凭证，先对它做数字签名，然后再用对称加密算法做加密处理，将签名、加密后的字串，写入cookie。cookie的名字必须固定（如ticket），因为后面再获取的时候，还得根据这个名字来获取cookie值。这一步添加数字签名的目的是防止登录凭证里的信息被篡改，因为一旦信息被篡改，那么下一步做签名验证的时候肯定会失败。做加密的目的，是防止cookie被别人截取的时候，无法轻易读到其中的用户信息。</p>
+</li>
+<li><p>(3).用户登录后发起后续请求，服务端根据上一步存登录凭证的cookie名字，获取到相关的cookie值。然后先做解密处理，再做数字签名的认证，如果这两步都失败，说明这个登录凭证非法；如果这两步成功，接着就可以拿到原始存入的登录凭证了。然后用这个凭证的过期时间和当前时间做对比，判断凭证是否过期，如果过期，就需要用户再重新登录；如果未过期，则允许请求继续。</p>
+<p>以上过程可简单使用流程图描述如下：<br><img src="/images/cookie-based.png" alt="alt"></p>
+<p>这种方式最大的优点就是实现了服务端的无状态化，彻底移除了服务端对会话的管理的逻辑，服务端只需要负责创建和验证登录cookie即可，无需保持用户的状态信息。对于第一种方式的第二个问题，用户会话信息共享的问题，它也能很好解决：因为如果只是同一个应用做集群部署，由于验证登录凭证的代码都是一样的，所以不管是哪个服务器处理用户请求，总能拿到cookie中的登录凭证来进行验证；如果是不同的应用，只要每个应用都包含相同的登录逻辑，那么他们也是能轻易实现会话共享的，不过这种情况下，登录逻辑里面数字签名以及加密解密要用到的密钥文件或者密钥串，需要在不同的应用里面共享，总而言之，就是需要算法完全保持一致。</p>
+<p>这种方式由于把登录凭证直接存放客户端，并且需要cookie传来传去，所以它的缺点也比较明显：</p>
+<p>cookie有大小限制，存储不了太多数据，所以要是登录凭证存的消息过多，导致加密签名后的串太长，就会引发别的问题，比- (1).如其它业务场景需要cookie的时候，就有可能没那么多空间可用了；所以用的时候得谨慎，得观察实际的登录cookie的大小；比如太长，就要考虑是非是数字签名的算法太严格，导致签名后的串太长，那就适当调整签名逻辑；比如如果一开始用4096位的RSA算法做数字签名，可以考虑换成1024、2048位；</p>
+</li>
+<li><p>(2).每次传送cookie，增加了请求的数量，对访问性能也有影响；</p>
+</li>
+<li><p>(3).也有跨域问题，毕竟还是要用cookie。</p>
+</li>
+<li><p><strong>token-based的管理方式</strong></p>
+<p>这种方式从流程和实现上来说，跟cookie-based的方式没有太多区别，只不过cookie-based里面写到cookie里面的ticket在这种方式下称为token，这个token在返回给客户端之后，后续请求都必须通过url参数或者是http header的形式，主动带上token，这样服务端接收到请求之后就能直接从http header或者url里面取到token进行验证：</p>
+<p>流程如下：<br><img src="/images/token-based.png" alt="alt"></p>
+<p>token可以存于localStorage或者sessionStorage里面，然后每发ajax请求的时候，都把token拿出来放到ajax请求的header里即可。不过如果是非接口的请求，比如直接通过点击链接请求一个页面这种，是无法自动带上token的。所以这种方式也仅限于走纯接口的web应用。</p>
+<p>这种方式用在web应用里也有跨域的问题，比如应用如果部署在a.com，api服务部署在b.com，从a.com里面发出ajax请求到b.com，默认情况下是会报跨域错误的，这种问题可以用CORS（跨域资源共享）的方式来快速解决。这里就是我之前提到的第一种方式缺点三的解决。</p>
+<p>这种方式跟cookie-based的方式同样都还有的一个问题就是ticket或者token刷新的问题。有的产品里面，你肯定不希望用户登录后，操作了半个小时，结果ticket或者token到了过期时间，然后用户又得去重新登录的情况出现。这个时候就得考虑ticket或token的自动刷新的问题，简单来说，可以在验证ticket或token有效之后，自动把ticket或token的失效时间延长，然后把它再返回给客户端；客户端如果检测到服务器有返回新的ticket或token，就替换原来的ticket或token。</p>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong>三种方式小结</strong>  </p>
+<p>在web应用里面，会话管理的安全性始终是最重要的安全问题，这个对用户的影响极大。</p>
+<p>首先从会话管理凭证来说，第一种方式的会话凭证仅仅是一个sessionid，所以只要这个sessionid足够随机，而不是一个自增的数字id值，那么其它人就不可能轻易地冒充别人的sessionid进行操作；第二种方式的凭证ticket以及第三种方式的凭证token都是一个在服务端做了数字签名，和加密处理的串，所以只要密钥不泄露，别人也无法轻易地拿到这个串中的有效信息并对它进行篡改。总之，这三种会话管理方式的凭证本身是比较安全的。</p>
+<p>然后从客户端和服务端的http过程来说，当别人截获到客户端请求中的会话凭证，就能拿这个凭证冒充原用户，做一些非法操作，而服务器也认不出来。这种安全问题，可以简单采用https来解决，虽然可能还有http劫持这种更高程度的威胁存在，但是从代码能做的防范，确实也就是这个层次了。</p>
+<h1 id="JWT"><a href="#JWT" class="headerlink" title="JWT"></a>JWT</h1><h2 id="JWT介绍"><a href="#JWT介绍" class="headerlink" title="JWT介绍"></a>JWT介绍</h2><p>JSON Web Token（JWT）是一个开放标准（RFC 7519），它定义了一种紧凑和自包含的方式，用于在各方之间作为JSON对象安全地传输信息。作为标准，它没有提供技术实现，但是大部分的语言平台都有按照它规定的内容提供了自己的技术实现，所以实际在用的时候，只要根据自己当前项目的技术平台，到官网上选用合适的实现库即可。</p>
+<p>使用JWT来传输数据，实际上传输的是一个字符串，这个字符串就是所谓的json web token字符串。所以广义上，JWT是一个标准的名称；狭义上，JWT指的就是用来传递的那个token字符串。这个串有两个特点： </p>
+<ol>
+<li>紧凑：指的是这个串很小，能通过url 参数，http请求提交的数据以及http header的方式来传递； </li>
+<li>自包含：这个串可以包含很多信息，比如用户的id、角色等，别人拿到这个串，就能拿到这些关键的业务信息，从而避免再通过数据库查询等方式才能得到它们。</li>
+</ol>
+<p>通常一个JWT是长这个样子的：<br><img src="/images/jwt1.png" alt="alt"></p>
+<h2 id="JWT的数据结构"><a href="#JWT的数据结构" class="headerlink" title="JWT的数据结构"></a>JWT的数据结构</h2><p>一个JWT实际上是由三个部分组成：header（头部）、payload（载荷）和signature（签名）。这三个部分在JWT里面分别对应英文句号分隔出来的三个串：<br><img src="/images/jwt2.png" alt="alt"></p>
+<p>先来看header部分的结构以及它的生成方法。header部分是由下面格式的json结构生成出来：<br><img src="/images/jwt3.png" alt="alt"></p>
+<p>这个json中的typ属性，用来标识整个token字符串是一个JWT字符串；它的alg属性，用来说明这个JWT签发的时候所使用的签名和摘要算法。typ跟alg属性的全称其实是type跟algorithm，分别是类型跟算法的意思。之所以都用三个字母来表示，也是基于JWT最终字串大小的考虑，同时也是跟JWT这个名称保持一致，这样就都是三个字符了…typ跟alg是JWT中标准中规定的属性名称，虽然在签发JWT的时候，也可以把这两个名称换掉，但是如果随意更换了这个名称，就有可能在JWT验证的时候碰到问题，因为拿到JWT的人，默认会根据typ和alg去拿JWT中的header信息，当你改了名称之后，显然别人是拿不到header信息的，他又不知道你把这两个名字换成了什么。JWT作为标准的意义在于统一各方对同一个事情的处理方式，各个使用方都按它约定好的格式和方法来签发和验证token，这样即使运行的平台不一样，也能够保证token进行正确的传递。</p>
+<p>一般签发JWT的时候，header对应的json结构只需要typ和alg属性就够了。JWT的header部分是把前面的json结构，经过Base64Url编码之后生成出来的：<br><img src="/images/jwt5.png" alt="alt"></p>
+<p>再来看payload部分的结构和生成过程。payload部分是由下面类似格式的json结构生成出来：<br><img src="/images/jwt6.png" alt="alt"></p>
+<p>payload的json结构并不像header那么简单，payload用来承载要传递的数据，它的json结构实际上是对JWT要传递的数据的一组声明，这些声明被JWT标准称为claims，它的一个“属性值对”其实就是一个claim，每一个claim的都代表特定的含义和作用。比如上面结构中的sub代表这个token的所有人，存储的是所有人的ID；name表示这个所有人的名字；admin表示所有人是否管理员的角色。当后面对JWT进行验证的时候，这些claim都能发挥特定的作用。</p>
+<p>根据JWT的标准，这些claims可以分为以下三种类型： </p>
+<p>1.Reserved claims（保留），它的含义就像是编程语言的保留字一样，属于JWT标准里面规定的一些claim。JWT标准里面定好的claim有：</p>
+<p>iss(Issuser)：代表这个JWT的签发主体；<br>sub(Subject)：代表这个JWT的主体，即它的所有人；<br>aud(Audience)：代表这个JWT的接收对象；<br>exp(Expiration time)：是一个时间戳，代表这个JWT的过期时间；<br>nbf(Not Before)：是一个时间戳，代表这个JWT生效的开始时间，意味着在这个时间之前验证JWT是会失败的；<br>iat(Issued at)：是一个时间戳，代表这个JWT的签发时间；<br>jti(JWT ID)：是JWT的唯一标识。</p>
+<p>2.Public claims(这部分不常用，网上也没有特别详细的介绍)</p>
+<p>3.Private claims，这个指的就是自定义的claim。比如前面那个结构举例中的admin和name都属于自定的claim。这些claim跟JWT标准规定的claim区别在于：JWT规定的claim，JWT的接收方在拿到JWT之后，都知道怎么对这些标准的claim进行验证；而private claims不会验证，除非明确告诉接收方要对这些claim进行验证以及规则才行。</p>
+<p>按照JWT标准的说明：保留的claims都是可选的，在生成payload不强制用上面的那些claim，你可以完全按照自己的想法来定义payload的结构，不过这样搞根本没必要：第一是，如果把JWT用于认证， 那么JWT标准内规定的几个claim就足够用了，甚至只需要其中一两个就可以了，假如想往JWT里多存一些用户业务信息，比如角色和用户名等，这倒是用自定义的claim来添加；第二是，JWT标准里面针对它自己规定的claim都提供了有详细的验证规则描述，每个实现库都会参照这个描述来提供JWT的验证实现，所以如果是自定义的claim名称，那么你用到的实现库就不会主动去验证这些claim。</p>
+<p>最后也是把这个json结构做base64url编码之后，就能生成payload部分的串：<br><img src="/images/jwt7.png" alt="alt"></p>
+<p>最后看signature部分的生成过程。签名是把header和payload对应的json结构进行base64url编码之后得到的两个串用英文句点号拼接起来，然后根据header里面alg指定的签名算法生成出来的。算法不同，签名结果不同，但是不同的算法最终要解决的问题是一样的。以alg: HS256为例来说明前面的签名如何来得到。按照前面alg可用值的说明，HS256其实包含的是两种算法：HMAC算法和SHA256算法，前者用于生成摘要，后者用于对摘要进行数字签名。</p>
+<p>以上就是一个JWT包含的全部内容以及它的签发过程。</p>
+<h2 id="JWT的验证过程"><a href="#JWT的验证过程" class="headerlink" title="JWT的验证过程"></a>JWT的验证过程</h2><p>这个部分介绍JWT的验证规则，主要包括签名验证和payload里面各个标准claim的验证逻辑介绍。只有验证成功的JWT，才能当做有效的凭证来使用。</p>
+<p>先说签名验证。当接收方接收到一个JWT的时候，首先要对这个JWT的完整性进行验证，这个就是签名认证。它验证的方法其实很简单，只要把header做base64url解码，就能知道JWT用的什么算法做的签名，然后用这个算法，再次用同样的逻辑对header和payload做一次签名，并比较这个签名是否与JWT本身包含的第三个部分的串是否完全相同，只要不同，就可以认为这个JWT是一个被篡改过的串，自然就属于验证失败了。接收方生成签名的时候必须使用跟JWT发送方相同的密钥，意味着要做好密钥的安全传递或共享。</p>
+<p>再来看payload的claim验证，拿前面标准的claim来一一说明：</p>
+<p>iss(Issuser)：如果签发的时候这个claim的值是“a.com”，验证的时候如果这个claim的值不是“a.com”就属于验证失败；<br>sub(Subject)：如果签发的时候这个claim的值是“liuyunzhuge”，验证的时候如果这个claim的值不是“liuyunzhuge”就属于验证失败；<br>(Audience)：如果签发的时候这个claim的值是“[‘b.com’,’c.com’]”，验证的时候这个claim的值至少要包含b.com，c.com的其中一个才能验证通过；<br>exp(Expiration time)：如果验证的时候超过了这个claim指定的时间，就属于验证失败；<br>nbf(Not Before)：如果验证的时候小于这个claim指定的时间，就属于验证失败；<br>iat(Issued at)：它可以用来做一些maxAge之类的验证，假如验证时间与这个claim指定的时间相差的时间大于通过maxAge指定的一个值，就属于验证失败；<br>jti(JWT ID)：如果签发的时候这个claim的值是“1”，验证的时候如果这个claim的值不是“1”就属于验证失败；<br>需要注意的是，在验证一个JWT的时候，签名认证是每个实现库都会自动做的，但是payload的认证是由使用者来决定的。因为JWT里面可能不会包含任何一个标准的claim，所以它不会自动去验证这些claim。</p>
+<p>以登录认证来说，在签发JWT的时候，完全可以只用sub跟exp两个claim，用sub存储用户的id，用exp存储它本次登录之后的过期时间，然后在验证的时候仅验证exp这个claim，以实现会话的有效期管理。</p>
+<h2 id="JWT-amp-SSO"><a href="#JWT-amp-SSO" class="headerlink" title="JWT&amp;SSO"></a>JWT&amp;SSO</h2><p>场景一：用户发起对业务系统的第一次访问，假设他第一次访问的是系统A的some/page这个页面，它最终成功访问到这个页面的过程是：<br><img src="/images/sso1.png" alt="alt"></p>
+<p>在这个过程里面，我认为理解的关键点在于：</p>
+<ul>
+<li><p>它用到了两个cookie(jwt和sid)和三次重定向来完成会话的创建和会话的传递；</p>
+</li>
+<li><p>jwt的cookie是写在systemA.com这个域下的，所以每次重定向到systemA.com的时候，jwt这个cookie只要有就会带过去；</p>
+</li>
+<li><p>sid的cookie是写在cas.com这个域下的，所以每次重定向到cas.com的时候，sid这个cookie只要有就会带过去；</p>
+</li>
+<li><p>在验证jwt的时候，如何知道当前用户已经创建了sso的会话？<br>因为jwt的payload里面存储了之前创建的sso会话的sessionid，所以当cas拿到jwt，就相当于拿到了sessionid，然后用这个sessionid去判断有没有的对应的session对象即可。</p>
+</li>
+</ul>
+<p>场景二：用户登录之后，继续访问系统A的其它页面，如some/page2，它的处理过程是：<br><img src="/images/sso2.png" alt="alt"></p>
+<p>从这一步可以看出，即使登录之后，也要每次跟CAS校验jwt的有效性以及会话的有效性，其实jwt的有效性也可以放在业务系统里面处理的，但是会话的有效性就必须到CAS那边才能完成了。当CAS拿到jwt里面的sessionid之后，就能到session缓存服务器里面去验证该sessionid对应的session对象是否存在，不存在，就说明会话已经销毁了（退出）。</p>
+<p>场景三：用户登录了系统A之后，再去访问其他系统如系统B的资源，比如系统B的some/page，它最终能访问到系统B的some/page的流程是：<br><img src="/images/sso3.png" alt="alt"></p>
+<p>这个过程的关键在于第一次重定向的时候，它会把sid这个cookie带回给CAS服务器，所以CAS服务器能够判断出会话是否已经建立，如果已经建立就跳过登录页的逻辑。</p>
+<p>场景四：用户继续访问系统B的其它资源，如系统B的some/page2：<br><img src="/images/sso4.png" alt="alt"></p>
+<p>这个场景的逻辑跟场景二完全一致。</p>
+<p>场景五：退出登录，假如它从系统B发起退出，最终的流程是：<br><img src="/images/sso5.png" alt="alt"></p>
+<p>最重要的是要清除sid的cookie，jwt的cookie可能业务系统都有创建，所以不可能在退出的时候还挨个去清除那些系统的cookie，只要sid一清除，那么即使那些jwt的cookie在下次访问的时候还会被传递到业务系统的服务端，由于jwt里面的sid已经无效，所以最后还是会被重定向到CAS登录页进行处理。</p>
+<p>方案总结<br>以上方案两个关键的前提：</p>
+<p>整个会话管理其实还是基于服务端的session来做的，只不过这个session只存在于CAS服务里面；<br>CAS之所以信任业务系统的jwt，是因为这个jwt是CAS签发的，理论上只要认证通过，就可以认为这个jwt是合法的。<br>jwt本身是不可伪造，不可篡改的，但是不代表非法用户冒充正常用法发起请求，所以常规的几个安全策略在实际项目中都应该使用：</p>
+<ul>
+<li>使用https</li>
+<li>使用http-only的cookie，针对sid和jwt</li>
+<li>管理好密钥</li>
+<li>防范CSRF攻击。<br>尤其是CSRF攻击形式，很多都是钻代码的漏洞发生的，所以一旦出现CSRF漏洞，并且被人利用，那么别人就能用获得的jwt，冒充正常用户访问所有业务系统，这个安全问题的后果还是很严重的。考虑到这一点，为了在即使有漏洞的情况将损害减至最小，可以在jwt里面加入一个系统标识，添加一个验证，只有传过来的jwt内的系统标识与发起jwt验证请求的服务一致的情况下，才允许验证通过。这样的话，一个非法用户拿到某个系统的jwt，就不能用来访问其它业务系统了。</li>
+</ul>
+<p>在业务系统跟CAS发起attach/validate请求的时候，也可以在CAS端做些处理，因为这个请求，在一次SSO过程中，一个系统只应该发一次，所以只要之前已经给这个系统签发过jwt了，那么后续 同一系统的attach/validate请求都可以忽略掉。</p>
+<p>总的来说，这个方案的好处有：</p>
+<ul>
+<li><p>完全分布式，跨平台，CAS以及业务系统均可采用不同的语言来开发；</p>
+</li>
+<li><p>业务系统如系统A和系统B，可实现服务端无状态</p>
+</li>
+<li><p>假如是自己来实现，那么可以轻易的在CAS里面集成用户注册服务以及第三方登录服务，如微信登录等。<br>它的缺陷是：</p>
+</li>
+<li><p>第一次登录某个系统，需要三次重定向；</p>
+</li>
+<li><p>登录后的后续请求，每次都需要跟CAS进行会话验证，所以CAS的性能负载会比较大</p>
+</li>
+<li><p>登陆后的后续请求，每次都跟CAS交互，也会增加请求响应时间，影响用户体验。</p>
+</li>
+</ul>
+<h1 id="特别声明"><a href="#特别声明" class="headerlink" title="特别声明"></a>特别声明</h1><p><strong>JWT数据结构</strong>参考自<a href="https://blog.csdn.net/weixin_42139757/article/details/80689234" target="_blank" rel="noopener">https://blog.csdn.net/weixin_42139757/article/details/80689234</a><br><strong>JWT&amp;SSO</strong>参考自<a href="https://blog.csdn.net/weixin_41282397/article/details/85049850" target="_blank" rel="noopener">https://blog.csdn.net/weixin_41282397/article/details/85049850</a></p>
+<h1 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h1><p>自己还差得多，文章若有不足还希望看到的问题多多指教！</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/java/" rel="tag"># java</a>
+              <a href="/tags/%E6%A1%86%E6%9E%B6/" rel="tag"># 框架</a>
+              <a href="/tags/%E7%BD%91%E7%BB%9C/" rel="tag"># 网络</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/Java/%E6%B7%B1%E5%BA%A6%E4%BC%98%E5%85%88%E6%90%9C%E7%B4%A2%E4%B8%8E%E5%B9%BF%E5%BA%A6%E4%BC%98%E5%85%88%E6%90%9C%E7%B4%A2/" rel="prev" title="深度优先搜索与广度优先搜索">
+      <i class="fa fa-chevron-left"></i> 深度优先搜索与广度优先搜索
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+            <div>
+     
+       
+<div class="my_post_copyright">
+<div style="text-align:center;color: #ccc;font-size:14px;">
+------ 版权信息 ------</div>
+ <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+ 
+ <p><span>本文标题:</span><a href="/%E9%80%9A%E4%BF%A1/jwt%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95%E8%AF%A6%E7%BB%86%E6%95%B4%E7%90%86/">jwt单点登录详细整理</a></p>
+ <p><span>文章作者:</span><a href="/" title="访问 且听风雨 的个人博客">且听风雨</a></p>
+ <p><span>发布时间:</span>2020年03月22日 - 16:45</p>
+ <p><span>最后更新:</span>2020年03月22日 - 16:41</p>
+ <p><span>原始链接:</span><a href="/%E9%80%9A%E4%BF%A1/jwt%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95%E8%AF%A6%E7%BB%86%E6%95%B4%E7%90%86/" title="jwt单点登录详细整理">http://sunze.ltd/%E9%80%9A%E4%BF%A1/jwt%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95%E8%AF%A6%E7%BB%86%E6%95%B4%E7%90%86/</a>
+    <span class="copy-path"  title="点击复制文章链接"><i class="fa fa-clipboard" data-clipboard-text="http://sunze.ltd/%E9%80%9A%E4%BF%A1/jwt%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95%E8%AF%A6%E7%BB%86%E6%95%B4%E7%90%86/"  aria-label="复制成功！"></i></span>
+ </p>
+ <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>  
+</div>
+<script> 
+   var clipboard = new Clipboard('.fa-clipboard');
+   $(".fa-clipboard").click(function(){
+     clipboard.on('success', function(){
+       swal({   
+         title: "",   
+         text: '复制成功',
+         icon: "success", 
+         showConfirmButton: true
+         });
+ 	 });
+   });  
+</script>
+
+     
+      </div>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#会话管理"><span class="nav-number">2.</span> <span class="nav-text">会话管理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#JWT"><span class="nav-number">3.</span> <span class="nav-text">JWT</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#JWT介绍"><span class="nav-number">3.1.</span> <span class="nav-text">JWT介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#JWT的数据结构"><span class="nav-number">3.2.</span> <span class="nav-text">JWT的数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#JWT的验证过程"><span class="nav-number">3.3.</span> <span class="nav-text">JWT的验证过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#JWT-amp-SSO"><span class="nav-number">3.4.</span> <span class="nav-text">JWT&amp;SSO</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#特别声明"><span class="nav-number">4.</span> <span class="nav-text">特别声明</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#后记"><span class="nav-number">5.</span> <span class="nav-text">后记</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="且听风雨"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">且听风雨</p>
+  <div class="site-description" itemprop="description">我要的简单</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">且听风雨</span>
+</div>
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  </div>-->
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el: '#valine-comments',
+      verify: false,
+      notify: false,
+      appId: 'xCJ4TGxK1RMKgiRxNTkg2rIa-gzGzoHsz',
+      appKey: 'fuotpoa2trvaTc0MOwfAHfak',
+      placeholder: "Just go go",
+      avatar: 'mm',
+      meta: guest,
+      pageSize: '10' || 10,
+      visitor: false,
+      lang: 'zh-cn' || 'zh-cn',
+      path: location.pathname,
+      recordIP: false,
+      serverURLs: ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
