@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('http://sunze.ltd').hostname,
+    root: '/',
+    scheme: 'Muse',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'public/search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="前言继续整理常用排序算法…">
+<meta property="og:type" content="article">
+<meta property="og:title" content="排序算法归总-2">
+<meta property="og:url" content="http://sunze.ltd/Java/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E5%BD%92%E6%80%BB-2/index.html">
+<meta property="og:site_name" content="sunze.ltd">
+<meta property="og:description" content="前言继续整理常用排序算法…">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://sunze.ltd/images/xier.gif">
+<meta property="og:image" content="http://sunze.ltd/images/xier.jpeg">
+<meta property="og:image" content="http://sunze.ltd/images/kuaisu.gif">
+<meta property="og:image" content="http://sunze.ltd/images/guibing.gif">
+<meta property="og:image" content="http://sunze.ltd/images/guibing.png">
+<meta property="article:published_time" content="2020-04-18T10:19:16.000Z">
+<meta property="article:modified_time" content="2020-11-18T10:31:20.807Z">
+<meta property="article:author" content="且听风雨">
+<meta property="article:tag" content="算法">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://sunze.ltd/images/xier.gif">
+
+<link rel="canonical" href="http://sunze.ltd/Java/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E5%BD%92%E6%80%BB-2/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>排序算法归总-2 | sunze.ltd</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">sunze.ltd</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://sunze.ltd/Java/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E5%BD%92%E6%80%BB-2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="且听风雨">
+      <meta itemprop="description" content="我要的简单">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="sunze.ltd">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          排序算法归总-2
+        </h1>
+
+        <div class="post-meta">
+
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-04-18 18:19:16" itemprop="dateCreated datePublished" datetime="2020-04-18T18:19:16+08:00">2020-04-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index">
+                    <span itemprop="name">Java</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/Java/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E5%BD%92%E6%80%BB-2/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/Java/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E5%BD%92%E6%80%BB-2/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>继续整理常用排序算法…</p>
+<a id="more"></a>
+<h1 id="注"><a href="#注" class="headerlink" title="注"></a>注</h1><p>下面的演示图源于网络，个人觉得很清晰就一起收藏了</p>
+<h1 id="希尔排序"><a href="#希尔排序" class="headerlink" title="希尔排序"></a>希尔排序</h1><p>传统的插入排序算法在某些场景中存在着一些问题，例如[2，3，4，5，1]这样的一个数组，当我们对其进行插入排序的时候，发现要插入的数字是1，而要想将1插入到最前面，需要经过四个步骤，分别将5、4、3、2后移。所以得出结论：如果较小的数是我们需要进行插入的数，那效率就会比较低。鉴于这种场景的缺陷，希尔排序诞生了，它是插入排序的一种更高效的版本。<br>先看看希尔排序的概念：<br>希尔排序(Shell’s Sort)是插入排序的一种又称“缩小增量排序”（Diminishing Increment Sort），是直接插入排序算法的一种更高效的改进版本。希尔排序是非稳定排序算法。该方法因D.L.Shell于1959年提出而得名。<br>希尔排序是把记录按下标的一定增量分组，对每组使用直接插入排序算法排序；随着增量逐渐减少，每组包含的关键词越来越多，当增量减至1时，整个文件恰被分成一组，算法便终止。<br>演示：<br><img src="/images/xier.gif" alt="alt"></p>
+<p>动画如果没有看懂，我这里再贴几张静态图：<br><img src="/images/xier.jpeg" alt="alt"><br>代码如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">@Test</span><br><span class="line">public void ShellSort() &#123;</span><br><span class="line">	int[] arr &#x3D; &#123; 3, 44, 38, 5, 47, 15, 36, 26, 27, 2, 46, 4, 19, 50, 48 &#125;;</span><br><span class="line">	for (int gap &#x3D; arr.length &#x2F; 2; gap &gt; 0; gap &#x2F;&#x3D; 2) &#123;</span><br><span class="line">		&#x2F;&#x2F; 对数组元素进行分组</span><br><span class="line">		for (int i &#x3D; gap; i &lt; arr.length; i++) &#123;</span><br><span class="line">			&#x2F;&#x2F; 遍历各组中的元素</span><br><span class="line">			for (int j &#x3D; i - gap; j &gt;&#x3D; 0; j -&#x3D; gap) &#123;</span><br><span class="line">				&#x2F;&#x2F; 交换元素</span><br><span class="line">				if (arr[j] &gt; arr[j + gap]) &#123;</span><br><span class="line">					int temp &#x3D; arr[j];</span><br><span class="line">					arr[j] &#x3D; arr[j + gap];</span><br><span class="line">					arr[j + gap] &#x3D; temp;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	System.out.println(Arrays.toString(arr));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>那么在上面的程序段中，数组长度为15，所以在第一轮，数组被分为了15 / 2 = 7个小组，然后分别对每个小组的元素进行遍历。在第一轮中小组之间的元素间隔都为7，所以分成的小组数其实也就是元素之间的间隔。接着就可以对每个小组的元素进行比较，然后进行交换，接下来以此类推。</p>
+<h1 id="快速排序"><a href="#快速排序" class="headerlink" title="快速排序"></a>快速排序</h1><p>快速排序（Quicksort）是对冒泡排序的一种改进。<br>快速排序由C. A. R. Hoare在1960年提出。它的基本思想是：通过一趟排序将要排序的数据分割成独立的两部分，其中一部分的所有数据都比另外一部分的所有数据都要小，然后再按此方法对这两部分数据分别进行快速排序，整个排序过程可以递归进行，以此达到整个数据变成有序序列。<br>演示：<br><img src="/images/kuaisu.gif" alt="alt"></p>
+<p>代码如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">@Test</span><br><span class="line">public static void quickSort(int[] arr, int left, int right) &#123;</span><br><span class="line">		int l &#x3D; left;&#x2F;&#x2F; 左下标</span><br><span class="line">		int r &#x3D; right;&#x2F;&#x2F; 右下标</span><br><span class="line">		int pivot &#x3D; arr[(left + right) &#x2F; 2];&#x2F;&#x2F; 找到中间的值</span><br><span class="line">		&#x2F;&#x2F; 将比pivot小的值放在其左边，比pivot大的值放在其右边</span><br><span class="line">		while (l &lt; r) &#123;</span><br><span class="line">			&#x2F;&#x2F; 在pivot左边寻找，直至找到大于等于pivot的值才退出</span><br><span class="line">			while (arr[l] &lt; pivot) &#123;</span><br><span class="line">				l +&#x3D; 1;&#x2F;&#x2F; 将l右移一位</span><br><span class="line">			&#125;</span><br><span class="line">			&#x2F;&#x2F; 在pivot右边寻找，直至找到小于等于pivot的值才退出</span><br><span class="line">			while (arr[r] &gt; pivot) &#123;</span><br><span class="line">				r -&#x3D; 1;&#x2F;&#x2F; 将r左移一位</span><br><span class="line">			&#125;</span><br><span class="line">			if (l &gt;&#x3D; r) &#123;</span><br><span class="line">				&#x2F;&#x2F; 左右下标重合，寻找完毕，退出循环</span><br><span class="line">				break;</span><br><span class="line">			&#125;</span><br><span class="line">			&#x2F;&#x2F; 交换元素</span><br><span class="line">			int temp &#x3D; arr[l];</span><br><span class="line">			arr[l] &#x3D; arr[r];</span><br><span class="line">			arr[r] &#x3D; temp;</span><br><span class="line"></span><br><span class="line">			&#x2F;&#x2F;倘若发现值相等的情况，则没有比较的必要，直接移动下标即可</span><br><span class="line">		</span><br><span class="line">			&#x2F;&#x2F; 如果交换完后，发现arr[l]&#x3D;&#x3D;pivot，此时应将r左移一位</span><br><span class="line">			if (arr[l] &#x3D;&#x3D; pivot) &#123;</span><br><span class="line">				r -&#x3D; 1;</span><br><span class="line">			&#125;</span><br><span class="line">			&#x2F;&#x2F; 如果交换完后，发现arr[r]&#x3D;&#x3D;pivot，此时应将l右移一位</span><br><span class="line">			if (arr[r] &#x3D;&#x3D; pivot) &#123;</span><br><span class="line">				l +&#x3D; 1;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		&#x2F;&#x2F; 如果l&#x3D;&#x3D;r，要把这两个下标错开，否则会出现无限递归，导致栈溢出的情况</span><br><span class="line">		if (l &#x3D;&#x3D; r) &#123;</span><br><span class="line">			l +&#x3D; 1;</span><br><span class="line">			r -&#x3D; 1;</span><br><span class="line">		&#125;</span><br><span class="line">		&#x2F;&#x2F; 向左递归</span><br><span class="line">		if (left &lt; r) &#123;</span><br><span class="line">			quickSort(arr, left, r);</span><br><span class="line">		&#125;</span><br><span class="line">		&#x2F;&#x2F; 向右递归</span><br><span class="line">		if (right &gt; l) &#123;</span><br><span class="line">			quickSort(arr, l, right);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>快速排序的实现原理很简单，就是将原数组分成两部分，然后以中间值为标准，比它小的就放其左边，比它大的就放其右边，然后在左右两边又以相同的方式继续排序。<br>所以在代码实现过程中，首先要创建两个移动的变量，一个从最左边开始往右移动，一个从最右边开始往左移动，通过这两个变量来遍历左右两部分的元素。当发现左边有大于中间数的元素，右边有小于中间数的元素，此时就进行交换。当两个变量重合也就是相等的时候遍历结束，然后左右两部分作递归处理。</p>
+<h1 id="归并排序"><a href="#归并排序" class="headerlink" title="归并排序"></a>归并排序</h1><p>归并排序（MERGE-SORT）是建立在归并操作上的一种有效的排序算法,该算法是采用分治法（Divide and Conquer）的一个非常典型的应用。将已有序的子序列合并，得到完全有序的序列；即先使每个子序列有序，再使子序列段间有序。若将两个有序表合并成一个有序表，称为二路归并。<br>演示：<br><img src="/images/guibing.gif" alt="alt"></p>
+<p>归并排序使用了一种分治思想，分治思想的意思就是’分而治之”，就是把一个复杂的问题分成两个或更多的相同或相似的子问题，再把子问题分成更小的子问题……直到最后子问题可以简单地直接求解。<br>通过这个动图来看的话，相信很多人都一脸懵，没关系，我们通过静态图来分析一下：<br><img src="/images/guibing.png" alt="alt"><br>假设现在有一个待排序的序列，[5，2，4，7，1，3，2，2]，那么我们就需要将该序列进行分治，先将其分成两份：[5，2，4，7]和[1，3，2，2]，再将这两份分别分成两份：[5，2]和[4，7]；[1，3]和[2，2]，最后将这四部分再次分别分为两份，最后就将整个序列分为了八份。需要注意的是，在分的过程中，不需要遵循任何规则，关键在于归并，归并的过程中便实现了元素的排序。<br>代码如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">@Test</span><br><span class="line">	public static void mergeSort(int[] arr, int left, int right, int[] temp) &#123;</span><br><span class="line">		&#x2F;&#x2F; 分解</span><br><span class="line">		if (left &lt; right) &#123;</span><br><span class="line">			int mid &#x3D; (left + right) &#x2F; 2;&#x2F;&#x2F; 中间索引</span><br><span class="line">			&#x2F;&#x2F; 向左递归进行分解</span><br><span class="line">			mergeSort(arr, left, mid, temp);</span><br><span class="line">			&#x2F;&#x2F; 向右递归进行分解</span><br><span class="line">			mergeSort(arr, mid + 1, right, temp);&#x2F;&#x2F; mid + 1，中间位置的后一个位置才是右边序列的开始位置</span><br><span class="line">			&#x2F;&#x2F; 每分解一轮便合并一轮</span><br><span class="line">			merge(arr, left, right, mid, temp);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	&#x2F;**</span><br><span class="line">	 * 合并的方法</span><br><span class="line">	 * </span><br><span class="line">	 * @param arr   待排序的数组</span><br><span class="line">	 * @param left  左边有序序列的初始索引</span><br><span class="line">	 * @param right 中间索引</span><br><span class="line">	 * @param mid   右边有序序列的初始索引</span><br><span class="line">	 * @param temp  做中转的数组</span><br><span class="line">	 *&#x2F;</span><br><span class="line">	public static void merge(int[] arr, int left, int right, int mid, int[] temp) &#123;</span><br><span class="line">		int i &#x3D; left; &#x2F;&#x2F; 初始化i，左边有序序列的初始索引</span><br><span class="line">		int j &#x3D; mid + 1;&#x2F;&#x2F; 初始化j，右边有序序列的初始索引(右边有序序列的初始位置即为中间位置的后一个位置)</span><br><span class="line">		int t &#x3D; 0;&#x2F;&#x2F; 指向temp数组的当前索引，初始为0</span><br><span class="line">		&#x2F;&#x2F; 先把左右两边的数据(已经有序)按规则填充到temp数组</span><br><span class="line">		&#x2F;&#x2F; 直到左右两边的有序序列，有一边处理完成为止</span><br><span class="line">		while (i &lt;&#x3D; mid &amp;&amp; j &lt;&#x3D; right) &#123;</span><br><span class="line">			&#x2F;&#x2F; 如果左边有序序列的当前元素小于或等于右边有序序列的当前元素，就将左边的元素填充到temp数组中</span><br><span class="line">			if (arr[i] &lt;&#x3D; arr[j]) &#123;</span><br><span class="line">				temp[t] &#x3D; arr[i];</span><br><span class="line">				t++;&#x2F;&#x2F; 索引后移</span><br><span class="line">				i++;&#x2F;&#x2F; i后移</span><br><span class="line">			&#125; else &#123;</span><br><span class="line">				&#x2F;&#x2F; 反之，将右边有序序列的当前元素填充到temp数组中</span><br><span class="line">				temp[t] &#x3D; arr[j];</span><br><span class="line">				t++;&#x2F;&#x2F; 索引后移</span><br><span class="line">				j++;&#x2F;&#x2F; j后移</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		&#x2F;&#x2F; 把有剩余数据的一边的元素填充到temp中</span><br><span class="line">		while (i &lt;&#x3D; mid) &#123;</span><br><span class="line">			&#x2F;&#x2F; 此时说明左边序列还有剩余元素</span><br><span class="line">			&#x2F;&#x2F; 全部填充到temp数组</span><br><span class="line">			temp[t] &#x3D; arr[i];</span><br><span class="line">			t++;</span><br><span class="line">			i++;</span><br><span class="line">		&#125;</span><br><span class="line">		while (j &lt;&#x3D; right) &#123;</span><br><span class="line">			&#x2F;&#x2F; 此时说明左边序列还有剩余元素</span><br><span class="line">			&#x2F;&#x2F; 全部填充到temp数组</span><br><span class="line">			temp[t] &#x3D; arr[j];</span><br><span class="line">			t++;</span><br><span class="line">			j++;</span><br><span class="line">		&#125;</span><br><span class="line">		&#x2F;&#x2F; 将temp数组的元素复制到原数组</span><br><span class="line">		t &#x3D; 0;</span><br><span class="line">		int tempLeft &#x3D; left;</span><br><span class="line">		while (tempLeft &lt;&#x3D; right) &#123;</span><br><span class="line">			arr[tempLeft] &#x3D; temp[t];</span><br><span class="line">			t++;</span><br><span class="line">			tempLeft++;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>来分析一下吧，对于该排序算法，有两个部分组成，分解和合并。首先讲讲分解，在前面也说到了，我们需要将待排序的序列不停地进行分解，通过两个索引变量控制，一个初始索引，一个结尾索引。只有当两索引重合才结束分解。此时序列被分解成了十五个小份，这样分解工作就完成了。接下来是合并，合并操作也是最麻烦的，也是通过两个索引变量i，j。开始i在左边序列的第一个位置，j在右边序列的第一个位置，然后就是寻找左右两个序列中的最小值，放到新序列中，这时可能会出现一边的元素都放置完毕了，而另外一边还存在元素，此时只需将剩余的元素按顺序放进新序列即可，因为这时左右两边的序列已经是有序的了，最后将新序列复制到旧序列。这里也特别需要注意，因为合并的过程是分步的，而并非一次合并完成，所以数组的索引是在不断变化的。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E7%AE%97%E6%B3%95/" rel="tag"># 算法</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/Java/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E5%BD%92%E6%80%BB-1/" rel="prev" title="排序算法归总-1">
+      <i class="fa fa-chevron-left"></i> 排序算法归总-1
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/Java/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E5%BD%92%E6%80%BB-3(%E5%AE%8C%E7%BB%93)/" rel="next" title="排序算法归总-3(完结)">
+      排序算法归总-3(完结) <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+            <div>
+     
+       
+<div class="my_post_copyright">
+<div style="text-align:center;color: #ccc;font-size:14px;">
+------ 版权信息 ------</div>
+ <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+ 
+ <p><span>本文标题:</span><a href="/Java/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E5%BD%92%E6%80%BB-2/">排序算法归总-2</a></p>
+ <p><span>文章作者:</span><a href="/" title="访问 且听风雨 的个人博客">且听风雨</a></p>
+ <p><span>发布时间:</span>2020年04月18日 - 18:19</p>
+ <p><span>原始链接:</span><a href="/Java/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E5%BD%92%E6%80%BB-2/" title="排序算法归总-2">http://sunze.ltd/Java/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E5%BD%92%E6%80%BB-2/</a>
+    <span class="copy-path"  title="点击复制文章链接"><i class="fa fa-clipboard" data-clipboard-text="http://sunze.ltd/Java/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E5%BD%92%E6%80%BB-2/"  aria-label="复制成功！"></i></span>
+ </p>
+ <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>  
+</div>
+<script> 
+   var clipboard = new Clipboard('.fa-clipboard');
+   $(".fa-clipboard").click(function(){
+     clipboard.on('success', function(){
+       swal({   
+         title: "",   
+         text: '复制成功',
+         icon: "success", 
+         showConfirmButton: true
+         });
+ 	 });
+   });  
+</script>
+
+     
+      </div>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#注"><span class="nav-number">2.</span> <span class="nav-text">注</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#希尔排序"><span class="nav-number">3.</span> <span class="nav-text">希尔排序</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#快速排序"><span class="nav-number">4.</span> <span class="nav-text">快速排序</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#归并排序"><span class="nav-number">5.</span> <span class="nav-text">归并排序</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="且听风雨"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">且听风雨</p>
+  <div class="site-description" itemprop="description">我要的简单</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">且听风雨</span>
+</div>
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  </div>-->
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el: '#valine-comments',
+      verify: false,
+      notify: false,
+      appId: 'CtrrSmjDzUlNqFRQ7tKN0j2a-gzGzoHsz',
+      appKey: 'MFevcCYAcmo6tIwfYGahAM4B',
+      placeholder: "Just go go",
+      avatar: 'mm',
+      meta: guest,
+      pageSize: '10' || 10,
+      visitor: false,
+      lang: 'zh-cn' || 'zh-cn',
+      path: location.pathname,
+      recordIP: false,
+      serverURLs: ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

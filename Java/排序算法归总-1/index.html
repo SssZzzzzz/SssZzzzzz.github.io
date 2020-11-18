@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('http://sunze.ltd').hostname,
+    root: '/',
+    scheme: 'Muse',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'public/search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="前言不多BB,整理一下程序员必备技能——排序~">
+<meta property="og:type" content="article">
+<meta property="og:title" content="排序算法归总-1">
+<meta property="og:url" content="http://sunze.ltd/Java/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E5%BD%92%E6%80%BB-1/index.html">
+<meta property="og:site_name" content="sunze.ltd">
+<meta property="og:description" content="前言不多BB,整理一下程序员必备技能——排序~">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://sunze.ltd/images/maopao.gif">
+<meta property="og:image" content="http://sunze.ltd/images/xuanze.gif">
+<meta property="og:image" content="http://sunze.ltd/images/charu.gif">
+<meta property="article:published_time" content="2020-04-11T13:21:47.000Z">
+<meta property="article:modified_time" content="2020-11-18T10:20:51.362Z">
+<meta property="article:author" content="且听风雨">
+<meta property="article:tag" content="算法">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://sunze.ltd/images/maopao.gif">
+
+<link rel="canonical" href="http://sunze.ltd/Java/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E5%BD%92%E6%80%BB-1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>排序算法归总-1 | sunze.ltd</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">sunze.ltd</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://sunze.ltd/Java/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E5%BD%92%E6%80%BB-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="且听风雨">
+      <meta itemprop="description" content="我要的简单">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="sunze.ltd">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          排序算法归总-1
+        </h1>
+
+        <div class="post-meta">
+
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-04-11 21:21:47" itemprop="dateCreated datePublished" datetime="2020-04-11T21:21:47+08:00">2020-04-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index">
+                    <span itemprop="name">Java</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/Java/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E5%BD%92%E6%80%BB-1/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/Java/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E5%BD%92%E6%80%BB-1/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>不多BB,整理一下程序员必备技能——排序~</p>
+<a id="more"></a>
+<h1 id="注"><a href="#注" class="headerlink" title="注"></a>注</h1><p>下面的演示图源于网络，个人觉得很清晰就一起收藏了</p>
+<h1 id="可爱的冒泡排序"><a href="#可爱的冒泡排序" class="headerlink" title="可爱的冒泡排序"></a>可爱的冒泡排序</h1><p>冒泡排序（Bubble Sort），是一种较简单的排序算法。<br>它重复地走访过要排序的元素列，依次比较两个相邻的元素，如果他们的顺序（如从大到小、首字母从A到Z）错误就把他们交换过来。走访元素的工作是重复地进行直到没有相邻元素需要交换，也就是说该元素列已经排序完成。<br>这个算法的名字由来是因为越大的元素会经由交换慢慢“浮”到数列的顶端（升序或降序排列），就如同碳酸饮料中二氧化碳的气泡最终会上浮到顶端一样，故名“冒泡排序”。<br>演示：<br><img src="/images/maopao.gif" alt="alt"></p>
+<p>代码如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">@Test</span><br><span class="line">public void bubbleSort() &#123;</span><br><span class="line">	int[] arr &#x3D; &#123; 3, 44, 38, 5, 47, 15, 36, 26, 27, 2, 46, 4, 19, 50, 48 &#125;;</span><br><span class="line">	&#x2F;&#x2F; 统计比较次数</span><br><span class="line">	int count &#x3D; 0;</span><br><span class="line">	&#x2F;&#x2F; 第一轮比较</span><br><span class="line">	for (int i &#x3D; 0; i &lt; arr.length - 1; i++) &#123;</span><br><span class="line">		&#x2F;&#x2F; 第二轮比较</span><br><span class="line">		for (int j &#x3D; 0; j &lt; arr.length - 1 - i; j++) &#123;</span><br><span class="line">			if (arr[j] &gt; arr[j + 1]) &#123;</span><br><span class="line">				&#x2F;&#x2F; 交换位置</span><br><span class="line">				int temp &#x3D; arr[j];</span><br><span class="line">				arr[j] &#x3D; arr[j + 1];</span><br><span class="line">				arr[j + 1] &#x3D; temp;</span><br><span class="line">			&#125;</span><br><span class="line">			count++;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	System.out.println(Arrays.toString(arr));</span><br><span class="line">	System.out.println(&quot;一共比较了:&quot; + count + &quot;次&quot;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们首先在开始循环时定义了一个boolean变量为true，然后如果元素之间进行了交换，就将值置为false。所以，我们就可以通过这个boolean变量来判断是否有元素进行了交换。如果boolean变量为true，则证明没有元素进行交换，那么久说明此时的数组元素已经完成排序，那么跳出外层循环即可，否则就继续排序。</p>
+<h1 id="选择排序"><a href="#选择排序" class="headerlink" title="选择排序"></a>选择排序</h1><p>选择排序（Selection sort）是一种简单直观的排序算法。它的工作原理是：第一次从待排序的数据元素中选出最小（或最大）的一个元素，存放在序列的起始位置，然后再从剩余的未排序元素中寻找到最小（大）元素，然后放到已排序的序列的末尾。以此类推，直到全部待排序的数据元素的个数为零。选择排序是不稳定的排序方法。<br>演示：<br><img src="/images/xuanze.gif" alt="alt"></p>
+<p>代码如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">@Test</span><br><span class="line">public void SelectionSort() &#123;</span><br><span class="line">	int[] arr &#x3D; &#123; 3, 44, 38, 5, 47, 15, 36, 26, 27, 2, 46, 4, 19, 50, 48 &#125;;</span><br><span class="line">	for (int i &#x3D; 0; i &lt; arr.length - 1; i++) &#123;</span><br><span class="line">		int index &#x3D; i;</span><br><span class="line">		for (int j &#x3D; 1 + i; j &lt; arr.length; j++) &#123;</span><br><span class="line">			if (arr[j] &lt; arr[index]) &#123;</span><br><span class="line">				index &#x3D; j;&#x2F;&#x2F; 保存最小元素的下标</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		&#x2F;&#x2F; 此时已经找到最小元素的下标</span><br><span class="line">		&#x2F;&#x2F; 将最小元素与前面的元素交换</span><br><span class="line">		int temp &#x3D; arr[index];</span><br><span class="line">		arr[index] &#x3D; arr[i];</span><br><span class="line">		arr[i] &#x3D; temp;</span><br><span class="line">	&#125;</span><br><span class="line">	System.out.println(Arrays.toString(arr));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>实现也非常的简单，首先在外循环里定义了一个index变量存储i的值，这是为了避免重复地比较，因为在每一轮的比较结束后，前i个元素是已经排好序的，所以无需再次比较，只需从i开始即可。后面的比较都是基于index位置的元素进行比较，倘若比较完后index位置的元素是最小值，那就无需交换，不动即可。而如果找到了比index位置的元素更小的元素，那就将该元素的索引赋值给index，然后继续比较，直到比较完成，比较完成之后得到的index即为数组中的最小值，那此时只需要将index位置的元素和i位置的元素交换即可。</p>
+<h1 id="插入排序"><a href="#插入排序" class="headerlink" title="插入排序"></a>插入排序</h1><p>插入排序（Insertion sort）是一种简单直观且稳定的排序算法。如果有一个已经有序的数据序列，要求在这个已经排好的数据序列中插入一个数，但要求插入后此数据序列仍然有序，这个时候就要用到一种新的排序方法——插入排序法,插入排序的基本操作就是将一个数据插入到已经排好序的有序数据中，从而得到一个新的、个数加一的有序数据，算法适用于少量数据的排序，时间复杂度为O(n^2)。是稳定的排序方法。插入算法把要排序的数组分成两部分：第一部分包含了这个数组的所有元素，但将最后一个元素除外（让数组多一个空间才有插入的位置），而第二部分就只包含这一个元素（即待插入元素）。在第一部分排序完成后，再将这个最后元素插入到已排好序的第一部分中。<br>插入排序的基本思想是：每步将一个待排序的记录，按其关键码值的大小插入到前面已经排序的数组中的适当位置上，直到全部插入完为止。<br>演示：<br><img src="/images/charu.gif" alt="alt"></p>
+<p>代码如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">@Test</span><br><span class="line">public void InsertionSort() &#123;</span><br><span class="line">	int[] arr &#x3D; &#123; 3, 44, 38, 5, 47, 15, 36, 26, 27, 2, 46, 4, 19, 50, 48 &#125;;</span><br><span class="line">	for (int i &#x3D; 1; i &lt; arr.length; i++) &#123;</span><br><span class="line">		&#x2F;&#x2F; 定义待插入的数</span><br><span class="line">		int insertValue &#x3D; arr[i];</span><br><span class="line">		&#x2F;&#x2F; 找到待插入数的前一个数的下标</span><br><span class="line">		int insertIndex &#x3D; i - 1;</span><br><span class="line">		while (insertIndex &gt;&#x3D; 0 &amp;&amp; insertValue &lt; arr[insertIndex]) &#123;</span><br><span class="line">			arr[insertIndex + 1] &#x3D; arr[insertIndex];</span><br><span class="line">			insertIndex--;</span><br><span class="line">		&#125;</span><br><span class="line">		arr[insertIndex + 1] &#x3D; insertValue;</span><br><span class="line">	&#125;</span><br><span class="line">	System.out.println(Arrays.toString(arr));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>那么在这里，因为数组元素我们并不确定，所以只能将数组的第一个元素看成是一个有序的序列，所以从数组的第二个元素开始才是我们需要去寻找插入位置的元素。所以外层循环从1开始，然后将arr[i]，也就是当前的第二个元素先保存起来，然后找到待插入元素的前一个元素下标，也就是i-1，此时通过一个while循环去比较。<br>当insertIndex小于0时应该退出循环，因为此时已经与前面的所有元素比较完毕。在比较的过程中，如果待插入元素小于前一个元素，就将前一个元素后移，也就是将前一个元素的值直接赋值给待插入元素位置。因为在最开始已经将待插入元素进行了保存，所以只需将待插入元素的值赋值给它的前一个元素即可。因为在while循环中insertIndex执行了自减操作，所以它的前一个元素下标应为insertIndex + 1。而如果待插入的元素值大于前一个元素，那么就不会进入while循环，这样insertIndex + 1之后的位置仍然是自己所在的位置，所以赋值后值不改变，后面的操作以此类推。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E7%AE%97%E6%B3%95/" rel="tag"># 算法</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/%E9%80%9A%E4%BF%A1/jwt%E5%8D%95%E7%82%B9%E7%99%BB%E5%BD%95%E8%AF%A6%E7%BB%86%E6%95%B4%E7%90%86/" rel="prev" title="jwt单点登录详细整理">
+      <i class="fa fa-chevron-left"></i> jwt单点登录详细整理
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/Java/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E5%BD%92%E6%80%BB-2/" rel="next" title="排序算法归总-2">
+      排序算法归总-2 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+            <div>
+     
+       
+<div class="my_post_copyright">
+<div style="text-align:center;color: #ccc;font-size:14px;">
+------ 版权信息 ------</div>
+ <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+ 
+ <p><span>本文标题:</span><a href="/Java/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E5%BD%92%E6%80%BB-1/">排序算法归总-1</a></p>
+ <p><span>文章作者:</span><a href="/" title="访问 且听风雨 的个人博客">且听风雨</a></p>
+ <p><span>发布时间:</span>2020年04月11日 - 21:21</p>
+ <p><span>原始链接:</span><a href="/Java/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E5%BD%92%E6%80%BB-1/" title="排序算法归总-1">http://sunze.ltd/Java/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E5%BD%92%E6%80%BB-1/</a>
+    <span class="copy-path"  title="点击复制文章链接"><i class="fa fa-clipboard" data-clipboard-text="http://sunze.ltd/Java/%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E5%BD%92%E6%80%BB-1/"  aria-label="复制成功！"></i></span>
+ </p>
+ <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>  
+</div>
+<script> 
+   var clipboard = new Clipboard('.fa-clipboard');
+   $(".fa-clipboard").click(function(){
+     clipboard.on('success', function(){
+       swal({   
+         title: "",   
+         text: '复制成功',
+         icon: "success", 
+         showConfirmButton: true
+         });
+ 	 });
+   });  
+</script>
+
+     
+      </div>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#注"><span class="nav-number">2.</span> <span class="nav-text">注</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#可爱的冒泡排序"><span class="nav-number">3.</span> <span class="nav-text">可爱的冒泡排序</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#选择排序"><span class="nav-number">4.</span> <span class="nav-text">选择排序</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#插入排序"><span class="nav-number">5.</span> <span class="nav-text">插入排序</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="且听风雨"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">且听风雨</p>
+  <div class="site-description" itemprop="description">我要的简单</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">且听风雨</span>
+</div>
+
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> v7.7.0
+  </div>-->
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el: '#valine-comments',
+      verify: false,
+      notify: false,
+      appId: 'CtrrSmjDzUlNqFRQ7tKN0j2a-gzGzoHsz',
+      appKey: 'MFevcCYAcmo6tIwfYGahAM4B',
+      placeholder: "Just go go",
+      avatar: 'mm',
+      meta: guest,
+      pageSize: '10' || 10,
+      visitor: false,
+      lang: 'zh-cn' || 'zh-cn',
+      path: location.pathname,
+      recordIP: false,
+      serverURLs: ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
