@@ -46,18 +46,20 @@
   };
 </script>
 
-  <meta name="description" content="前言  一般的情况下，项目都是前后端分离的，所以这里就涉及到一个很严重的问题，当协议，端口，IP三者有其一不同就会产生跨域，所以需要做跨域支持。">
+  <meta name="description" content="前言 主要探索类加载器是如何找到指定的Class文件以及怎样将Class文件装载进内存，以便执行引擎执行Class文件中存在的数据和指令，从而使你的Java程序跑起来。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="JVM类加载机制">
+<meta property="og:title" content="JVM类加载机制（转）">
 <meta property="og:url" content="http://sunze.ltd/Java/JVM%E7%B1%BB%E5%8A%A0%E8%BD%BD%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B/index.html">
 <meta property="og:site_name" content="sunze.ltd">
-<meta property="og:description" content="前言  一般的情况下，项目都是前后端分离的，所以这里就涉及到一个很严重的问题，当协议，端口，IP三者有其一不同就会产生跨域，所以需要做跨域支持。">
+<meta property="og:description" content="前言 主要探索类加载器是如何找到指定的Class文件以及怎样将Class文件装载进内存，以便执行引擎执行Class文件中存在的数据和指令，从而使你的Java程序跑起来。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://sunze.ltd/images/class.jpg">
 <meta property="article:published_time" content="2020-07-12T15:45:47.000Z">
-<meta property="article:modified_time" content="2020-11-18T14:18:52.100Z">
+<meta property="article:modified_time" content="2020-11-19T10:20:06.635Z">
 <meta property="article:author" content="且听风雨">
 <meta property="article:tag" content="java">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://sunze.ltd/images/class.jpg">
 
 <link rel="canonical" href="http://sunze.ltd/Java/JVM%E7%B1%BB%E5%8A%A0%E8%BD%BD%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B/">
 
@@ -71,7 +73,7 @@
   };
 </script>
 
-  <title>JVM类加载机制 | sunze.ltd</title>
+  <title>JVM类加载机制（转） | sunze.ltd</title>
   
 
 
@@ -223,7 +225,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          JVM类加载机制
+          JVM类加载机制（转）
         </h1>
 
         <div class="post-meta">
@@ -283,29 +285,96 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>  一般的情况下，项目都是前后端分离的，所以这里就涉及到一个很严重的问题，当协议，端口，IP三者有其一不同就会产生跨域，所以需要做跨域支持。</p>
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p> 主要探索类加载器是如何找到指定的Class文件以及怎样将Class文件装载进内存，以便执行引擎执行Class文件中存在的数据和指令，从而使你的Java程序跑起来。</p>
 <a id="more"></a>
-<h1 id="测试跨域的文件"><a href="#测试跨域的文件" class="headerlink" title="测试跨域的文件"></a>测试跨域的文件</h1><p>在这之前，我们先写一个测试接口是否跨域的html ,这样下面的测试比较方便。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">&lt;!DOCTYPE html&gt;</span><br><span class="line">&lt;html lang&#x3D;&quot;en&quot;&gt;</span><br><span class="line">&lt;head&gt;</span><br><span class="line">    &lt;meta charset&#x3D;&quot;UTF-8&quot;&gt;</span><br><span class="line">    &lt;title&gt;Title&lt;&#x2F;title&gt;</span><br><span class="line">&lt;&#x2F;head&gt;</span><br><span class="line">&lt;link type&#x3D;&quot;test&#x2F;css&quot; href&#x3D;&quot;css&#x2F;style.css&quot; rel&#x3D;&quot;stylesheet&quot;&gt;</span><br><span class="line"></span><br><span class="line">&lt;body&gt;</span><br><span class="line"></span><br><span class="line">	&lt;input type&#x3D;&quot;text&quot; style&#x3D;&quot;width:600px;height:30px;font-size:14px;&quot; id&#x3D;&quot;urlText&quot; value&#x3D;&quot;&quot; &#x2F;&gt;</span><br><span class="line">	&lt;br&gt;</span><br><span class="line">	&lt;input type&#x3D;&quot;button&quot; style&#x3D;&quot;margin: 10px&quot;;  id&#x3D;&quot;cors&quot; value&#x3D;&quot;判断是否可访问&quot;&#x2F;&gt;</span><br><span class="line"></span><br><span class="line">&lt;p&gt;http:&#x2F;&#x2F;localhost:9090&#x2F;test&#x2F;&lt;&#x2F;p&gt;</span><br><span class="line">&lt;script type&#x3D;&quot;text&#x2F;javascript&quot; src&#x3D;&quot;https:&#x2F;&#x2F;code.jquery.com&#x2F;jquery-3.2.1.min.js&quot;&gt;&lt;&#x2F;script&gt;  </span><br><span class="line">&lt;script type&#x3D;&quot;text&#x2F;javascript&quot;&gt;</span><br><span class="line">	$(function()&#123;</span><br><span class="line">	$(&quot;#cors&quot;).click(</span><br><span class="line">		function()&#123;</span><br><span class="line">			var url2 &#x3D; $(&quot;#urlText&quot;).val();</span><br><span class="line">			$.post(&#123;</span><br><span class="line">				contentType:&#39;application&#x2F;x-www-form-urlencoded;charset&#x3D;UTF-8&#39;,</span><br><span class="line">				url:url2,</span><br><span class="line">				data: &quot;&#x2F;rAIeKeSBG1LV XoIq82&#x2F;O&quot;,</span><br><span class="line">				success:function(data)&#123;</span><br><span class="line">					alert(&quot;success&quot;);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;)</span><br><span class="line">		&#125;);</span><br><span class="line">	&#125;);</span><br><span class="line">&lt;&#x2F;script&gt;</span><br><span class="line">&lt;&#x2F;body&gt;</span><br><span class="line">&lt;&#x2F;html&gt;</span><br></pre></td></tr></table></figure>
+<h1 id="类的生命周期"><a href="#类的生命周期" class="headerlink" title="类的生命周期"></a>类的生命周期</h1><p>先来看一下类的生命周期：<br><img src="/images/class.jpg" alt="alt"></p>
+<h1 id="类加载的过程"><a href="#类加载的过程" class="headerlink" title="类加载的过程"></a>类加载的过程</h1><h2 id="加载"><a href="#加载" class="headerlink" title="加载"></a>加载</h2><p>我们首先要明白一件事情：什么开始进行类加载过程的第一阶段：加载？Java虚拟机没有进行强制约束，交由虚拟机的具体实现自由把握。</p>
+<p>看完上面的话，我们来看在加载阶段，虚拟机需要完成哪些事情：</p>
+<p>通过一个类的全限定名来获取定义此类的二进制字节流<br>将获取到的二进制字节流转化成一种数据结构并放进方法区<br>在内存中生成一个代表此类的java.lang.Class对象，作为访问方法区中各种数据的接口</p>
+<p>对于方法区的认识：被加载的类的信息存储在方法区中，可以被线程所共享，也就是说，加载阶段完成后，虚拟机外部的二进制字节流就按照虚拟机所需的格式存储在了方法区之中。然后你能想起来那个二进制流中都存储了哪些信息吗？</p>
+<p>对于Class对象认识：Class对象虽然是在内存中，但并未明确规定是在Java堆中，对于HotSpot来说，Class对象存储在方法区中。它作为程序访问方法区中二进制字节流中所存储各种数据的接口。</p>
+<h2 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h2><p>从上面类的生命周期一图中我们可以看出，验证是连接的第一步，这一阶段的目的主要是为了确保Class文件的字节流中包含的信息符合当前虚拟机的要求，从而不会危害虚拟机自身安全。也就是说，当加载阶段将字节流加载进方法区之后，JVM需要做的第一件事就是对字节流进行安全校验，以保证格式正确，使自己之后能正确的解析到数据并保证这些数据不会对自身造成危害。</p>
+<p>验证阶段主要分成四个子阶段：<br>文件格式验证<br>元数据验证<br>字节码验证<br>符号引用验证</p>
+<p>而什么叫做元数据呢？</p>
+<p>所谓的元数据是指用来描述数据的数据，更通俗一点就是描述代码间关系，或者代码与其它资源（例如数据库表）之间内在联系的数据，你也可以更简单的认为成框架中的各种@注解，因为这些@注解很简介的描述了大量有关各个类、方法、字段额外的信息或之间的联系。</p>
+<p>元数据验证也就是验证这些额外的信息或它们之间的联系是否正确。</p>
+<p>我们还得注意字节码验证，在字节码验证中涉及到了一个概念：字节码流。</p>
+<p>字节码流 = 操作码 + 操作数。</p>
+<p>操作码就是伪指令，操作数就是普通的Java数据，如int，float等等。</p>
+<p>所以对字节码验证的过程就是对字节码流验证的过程，也就是验证操作码是否合法，操作数是否合法。</p>
+<p>而符号引用验证涉及到常量池解析的知识，在下文中我们顺带着将符号引用验证带过就行，现在先不说。</p>
+<p>准备<br>准备阶段你只要掌握两个知识点：</p>
+<p>1.准备阶段的目的：正式为类变量分配内存并设置类变量初始值的阶段，这些变量所使用的内存将在方法区中分配。</p>
+<p>注意我的重点：是类变量（static）不是实例变量，还有，我们又知道了在JVM的方法区中不仅存储着Class字节流（按照运行时方法区的数据结构进行存储，上述的二进制字节流是不严谨的说法，只是为了大家好理解），还有我们的类变量。</p>
+<p>2.这里的类变量初始值通常是指数据类型的零值。比如int的零值为0，long为0L，boolean为false… …真正的初始化赋值是在初始化阶段进行的。</p>
+<p>额外一点，如果你设置的类变量还具有final字段，如下：</p>
+<p>public static final int value = 123;</p>
+<p>那么在准备阶段变量的初始值就会被直接初始化为123，具体原因是由于拥有final字段的变量在它的字段属性表中会出现ConstantValue属性。</p>
+<p>解析<br>这一阶段我个人觉得不太好理解并且非常重要，但我还是会一点点剖析难点，保证你能听懂，所以开始吧～～</p>
+<p>先来看一下解析阶段的目的：虚拟机将常量池内的符号引用替换为直接引用。</p>
+<p>然后说一下解析阶段最大的特点：发生时间不可预料，有可能和初始化阶段互相交换位置。至于原因，我们等下再说。</p>
+<p>先来说看完解析阶段的目的吧，你有可能有三个疑问。哪个常量池？什么符号引用？什么直接引用？Ok，搞清这三个问题，解析这部分你也就学会了。</p>
+<p>首先来说常量池：在Class的文件结构中我们就花了大量的篇幅去介绍了常量池，我们再来总结一下：常量池(constant pool)指的是在编译期被确定，并被保存在已编译的.class文件中的一些数据。它包括了关于类、方法、接口等中的常量，也包括字符串常量。</p>
+<p>然后这段话中的常量池指的就是存在于.class文件中的常量池，结果在运行期被JVM装载，并且可以扩充的存在于方法区中的运行时常量池。</p>
+<p>然后来看符号引用：在Class文件中我们也讲述了什么是符号引用。总的来说就是常量池中存储的那些描述类、方法、接口的字面量，你可以简单的理解为就是那些所需要信息的全限定名，目的就是为了虚拟机在使用的时候可以定位到所需要的目标。</p>
+<p>最后来看直接引用：直接指向目标的指针、相对偏移量或能间接定位到目标的句柄。</p>
+<p>现在我们对上面那句话进行重新解读：虚拟机将运行时常量池中那些仅代表其他信息的符号引用解析为直接指向所需信息所在地址的指针。</p>
+<p>大概就是这样，我觉得你应该已经完全明白了。</p>
+<p>解决一个遗留的问题：还记得刚才没有说到的符号引用吗？</p>
+<p>这一阶段就是发生在JVM将符号引用转换为直接引用的时候，它的作用就是对类自身以外（常量池中的各种符号引用）的信息进行匹配性校验，以确保解析动作能够正常执行！</p>
+<p>在解析阶段主要有以下不同的动作，我只给大家罗列出来，不细讲，有兴趣的同学可以自行百度：</p>
+<p>类或接口的解析（注意数组类和非数组类）<br>字段（简单名称+字段描述符）解析（注意递归搜索）<br>类方法解析（注意递归搜索）<br>接口方法解析（注意递归搜索）<br>在解析阶段还有一个很有意思的东西：动态连接！</p>
+<p>它也是上面解析阶段发生时间不确定的直接原因：大部分JVM的实现都是延迟加载或者叫做动态连接。它的意思就是JVM装载某个类A时，如果类A中有引用其他类B，虚拟机并不会将这个类B也同时装载进JVM内存，而是等到执行的时候才去装载。</p>
+<p>而这个被引用的B类在引用它的类A中的表现形式主要被登记在了符号表中，而解析的过程就是当需要用到被引用类B的时候，将引用类B在引用类A的符号引用名改为内存里的直接引用。这就是解析发生时间不可预料的原因，而且这个阶段是发生在方法区中的。</p>
+<p>初始化<br>虚拟机规范定义了5种情况，会触发类的初始化阶段，也正是这个阶段，JVM才真正开始执行类中定义的Java程序代码：</p>
+<p>new一个对象、读取一个类静态字段、调用一个类的静态方法的时候<br>对类进行反射调用的时候<br>初始化一个类，发现父类还没有初始化，则先初始化父类<br>main方法开始执行时所在的类<br>最后一种情况我也不懂，就不贴了<br>额外补充：</p>
+<p>有三种引用类的方式不会触发初始化（也就是类的加载），为以下三种：</p>
+<p>通过子类引用父类的静态字段，不会导致子类初始化<br>通过数组定义来引用类，不会触发此类的初始化<br>引用另一个类中的常量不会触发另一个类的初始化，原因在于“常量传播优化”<br>来说一说常量传播优化吧（先看一份代码）：</p>
+<p>public class ConstClass {<br>    static {<br>        System.out.println(“ConstClass init!”);<br>    }</p>
+<pre><code>public static final String HELLOWORLD = &quot;hello world&quot;;</code></pre><p>}</p>
+<p>public class NotInitialization {</p>
+<pre><code>public static void main(String[] args) {
+    System.out.println(ConstClass.HELLOWORLD);
+}</code></pre><p>}<br>这种调用方式不会触发ConstClass的初始化，因为常量传播优化，常量“hello world”已经被存储到了NotInitialization类的常量池中，以后NotInitialization对常量ConstClass.HELLOWORLD的引用实际上都被转化为NotInitialization对自身常量池的引用。</p>
+<p>然后在初识化阶段我们重点掌握的知识就是类构造器<clinit>()了。</p>
+<p>这个东西我也只是提几点重要的：<br>1.<clinit>()是编译器自动收集类中的所有类变量的赋值动作和静态语句块合并产生的。<br>2.父类中定义的静态语句块要优先于子类的变量赋值操作。<br>3.虚拟机保证一个类的<clinit>()方法在多线程环境中被正确的加锁、同步。</p>
+<p>方法区使用实例<br>上面讲了那么多，不知道大家吸收了没有，学习的过程中一定要学会总结和抓中重点哦～</p>
+<p>咱们来看一个例子将上面类加载的过程来串一下吧，加深一下自己的印象：（其中还涉及了一点执行引擎的知识，没关系，很容易理解）</p>
+<p>class Lava {</p>
+<pre><code>private int speed = 5;
+void flow() {
 
-<p>接下来我们来学习下在springboot 项目中怎么实现支持跨域。</p>
-<h1 id="CrossOrigin-注解"><a href="#CrossOrigin-注解" class="headerlink" title="@CrossOrigin 注解"></a>@CrossOrigin 注解</h1><p>这种方法是springboot 自带的，使用比较简单，在需要支持的跨域的接口上加上这个注解就可以了。<br>比如在我们项目的demo 接口加上注解.就表示这个接口支持跨域，其中origins = “*”<br>表示所有的地址都可以访问这个接口，也可以写具体的地址，表示只有这个地址访问才能访问到接口。<br> <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">@RestController</span><br><span class="line">@CrossOrigin(origin &#x3D;&quot;*&quot;)</span><br><span class="line">public class Demo &#123;</span><br><span class="line">	@RequestMapping(&quot;&#x2F;&quot;)</span><br><span class="line">	public String Demo() &#123;</span><br><span class="line">		return &quot;Hello Word&quot;;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h2><p>我们也来测试一下，启动项目后，在浏览器上运行我们的测试的html文件。<br>发现localhost:9090/test/ 是可以访问的。<br>说明跨域是支持的。大伙可以先将注解去掉测试一下，然后加上注解测试一下进行对比。</p>
-<p>这种方式虽然很简单，但是缺点也不小，需要跨域的接口都需要加上这个注解，这对前后端分离的项目是不友好的，所以这种方式基本上用的很少。</p>
-<h1 id="重写WebMvcConfigurer的addCorsMappings-方法。"><a href="#重写WebMvcConfigurer的addCorsMappings-方法。" class="headerlink" title="重写WebMvcConfigurer的addCorsMappings 方法。"></a>重写WebMvcConfigurer的addCorsMappings 方法。</h1><p>这种方法在实际项目中也用的比较多，是一种全局支持跨域的方法。<br>我们创建一个CorsConfig 类。内容如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">@Configuration</span><br><span class="line">public class CorsConfig implements WebMvcConfigurer &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void addCorsMappings(CorsRegistry registry) &#123;</span><br><span class="line">        registry.addMapping(&quot;&#x2F;**&quot;)&#x2F;&#x2F;项目中的所有接口都支持跨域</span><br><span class="line">                .allowedOrigins(&quot;*&quot;)&#x2F;&#x2F;所有地址都可以访问，也可以配置具体地址</span><br><span class="line">                .allowCredentials(true)</span><br><span class="line">                .allowedMethods(&quot;*&quot;)&#x2F;&#x2F;&quot;GET&quot;, &quot;HEAD&quot;, &quot;POST&quot;, &quot;PUT&quot;, &quot;DELETE&quot;, &quot;OPTIONS&quot;</span><br><span class="line">                .maxAge(3600);&#x2F;&#x2F; 跨域允许时间</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>加上@Configuration 表示是配置类，在项目启动的时候会加载。实现WebMvcConfigurer 接口并重写addCorsMappings 方法。代码比较简单，也有注释。</p>
-<p>测试的话，大家可以自行测试，我测试都是通过的和上面一样测试就可以，这里就不占篇幅了。</p>
-<h1 id="Filter"><a href="#Filter" class="headerlink" title="Filter"></a>Filter</h1><p>除了上面方法外，也可以使用过滤器。我们创建一个CorsFilter 类，内容如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">@Slf4j</span><br><span class="line">@Component</span><br><span class="line">public class CorsFilter implements Filter &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException &#123;</span><br><span class="line">        HttpServletResponse response &#x3D; (HttpServletResponse)servletResponse;</span><br><span class="line">        response.setHeader(&quot;Access-Control-Allow-Origin&quot;, &quot;*&quot;);</span><br><span class="line">        response.setHeader(&quot;Access-Control-Allow-Methods&quot;, &quot;POST, PUT, GET, OPTIONS, DELETE&quot;);</span><br><span class="line">        response.setHeader(&quot;Access-Control-Max-Age&quot;, &quot;3600&quot;);</span><br><span class="line">        response.setHeader(&quot;Access-Control-Allow-Headers&quot;, &quot;Origin, X-Requested-With, Content-Type, Accept, client_id, uuid, Authorization&quot;);</span><br><span class="line">        response.setHeader(&quot;Cache-Control&quot;, &quot;no-cache, no-store, must-revalidate&quot;);</span><br><span class="line">        response.setHeader(&quot;Pragma&quot;, &quot;no-cache&quot;);</span><br><span class="line">        filterChain.doFilter(servletRequest,response);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>上面代码中设置response.setHeader(“Access-Control-Allow-Origin”, “*”);表示所有的地址都可以访问项目接口。</p>
-<h1 id="番外"><a href="#番外" class="headerlink" title="番外"></a>番外</h1><p>接下来我们再介绍一个常用的功能，前后端分离，在访问接口的时候，有的 公司往往会增加一下专属的后缀名才能访问。实际上没有什么太大的作用，能稍微增加一下系统的安全性。这里我就简单是实现一下。真个都非常简单。<br>一样的是实现WebMvcConfigurer 接口，重写configurePathMatch你方法和增加一个dispatcherServlet。</p>
-<p>代码如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">    public void configurePathMatch(PathMatchConfigurer configurer) &#123;</span><br><span class="line">        configurer.setUseRegisteredSuffixPatternMatch(true);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Bean</span><br><span class="line">    public ServletRegistrationBean servletRegistrationBean(DispatcherServlet dispatcherServlet) &#123;</span><br><span class="line">        ServletRegistrationBean bean &#x3D; new ServletRegistrationBean(dispatcherServlet);</span><br><span class="line">        bean.addUrlMappings(&quot;*.zlf&quot;);</span><br><span class="line">        return bean;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-<p>这个功能实现，就只用这个多代码，configurePathMatch方法中设置的configurer.setUseRegisteredSuffixPatternMatch(true); 主要是将index 和index.* 都指向我们controller 中配置的@RequestMapping(“/index”)。</p>
-<p>下面的servletRegistrationBean 方法主要是增加自定义拦截器，只有后缀为“.zlf”的接口才放行。</p>
-<p>这样两步就简单的实现了接口增加自定义的后缀名了。</p>
-<p>到此为止，springboot 支持跨域的方式就差不多了，当然还有其他的实现方式没有研究。这些希望对大家有帮助。</p>
+}</code></pre><p>}</p>
+<p>public class Volcano {</p>
+<pre><code>public static void main(String[] args) {
+    Lava lava = new Lava();
+    lava.flow();
+}</code></pre><p>}<br>不同的虚拟机实现可能会用完全不同的方法来操作，下面描述的只是其中一种可能——但并不是仅有的一种。</p>
+<p>加载：读取一个类的class文件并将其中的二进制字节流组织成正确的数据结构放进运行时方法区中：</p>
+<p>要运行Volcano程序，首先得以某种“依赖于实现的”方式告诉虚拟机“Volcano”这个名字。之后，虚拟机将找到并读入相应的class文件“Volcano.class”，然后它会从导入的class文件里的二进制数据中提取类型信息并放到方法区中。通过执行保存在方法区中的字节码，虚拟机开始执行main()方法，在执行时，它会一直持有指向当前类（Volcano类）的常量池（方法区中的一个数据结构）的指针。</p>
+<p>注意：虚拟机开始执行Volcano类中main()方法的字节码的时候，尽管Lava类还没被装载，但是和大多数（也许所有）虚拟机实现一样，它不会等到把程序中用到的所有类都装载后才开始运行。恰好相反，它只会需要时才装载相应的类。（延迟加载、动态连接）</p>
+<p>main()的第一条指令告知虚拟机为列在常量池第一项的类分配足够的内存。所以虚拟机使用指向Volcano常量池的指针找到第一项，发现它是一个对Lava类的符号引用，然后它就检查方法区，看Lava类是否已经被加载了。</p>
+<p>这个符号引用仅仅是一个给出了类Lava的全限定名“Lava”的字符串。为了能让虚拟机尽可能快地从一个名称找到类，虚拟机的设计者应当选择最佳的数据结构和算法。</p>
+<p>当虚拟机发现还没有装载过名为“Lava”的类时，它就开始查找并装载文件“Lava.class”，并把从读入的二进制数据中提取的类型信息放在方法区中。</p>
+<p>解析：</p>
+<p>紧接着，虚拟机以一个直接指向方法区Lava类数据的指针来替换常量池第一项（就是那个字符串“Lava”），以后就可以用这个指针来快速地访问Lava类了。这个替换过程称为常量池解析，即把常量池中的符号引用替换为直接引用。</p>
+<p>终于，虚拟机准备为一个新的Lava对象分配内存。此时它又需要方法区中的信息。还记得刚刚放到Volcano类常量池第一项的指针吗？现在虚拟机用它来访问Lava类型信息，找出其中记录的这样一条信息：一个Lava对象需要分配多少堆空间。</p>
+<p>JAVA虚拟机总能够通过存储在方法区的类型信息来确定一个对象需要多少内存，当JAVA虚拟机确定了一个Lava对象的大小后，它就在堆上分配这么大的空间，并把这个对象实例的变量speed初始化为默认初始值0。</p>
+<p>当把新生成的Lava对象的引用压到栈中，main()方法的第一条指令也完成了。接下来的指令通过这个引用调用Java代码（该代码把speed变量初始化为正确初始值5）。另一条指令将用这个引用调用Lava对象引用的flow()方法。</p>
+<p>类加载器<br>其实这一部分的知识并不多，你需要了解、掌握的知识只有两点：</p>
+<p>1.类加载器的命名空间<br>2.双亲委派模型</p>
+<p>说一点啊，看到这些高大上的名词你们不要怕，又不让你拿代码去实现，其实其中的原理都是很简单的。</p>
+<p>上面说了那么多，类加载器就是用于实现类加载动作的一段代码实现。好了，明白了它的作用，我们来看看什么是它命名空间。</p>
+<p>类加载器的命名空间：对于任意一个类，都需要由加载它的类加载器和这个类本身一同确立其在Java虚拟机中的唯一性，每一个类加载器，都拥有一个独立的类命名空间。也就是说，你现在要比较两个类是否相等，只有在这两个类是同一个类加载器加载的前提下才有意义。</p>
+<p>这就是类加载器的命名空间，不难吧～但是读完上面这段话我们可以提取出另一个重要的信息：你上面所说的话中好像包含这样一种意思：类加载器在JVM中不止一个？你很聪明！好了，接下来说明何谓双亲委派模型。</p>
+<p>双亲委派模型：首先你得知道在JVM中有三种系统提供的类加载器：启动类加载器，扩展类加载器、应用程序类加载器。关于这三种加载器的描述大家自行百度，这也不是重点。</p>
+<p>贴一张图：</p>
+<p>这里写图片描述</p>
+<p>如图，这种层次结构就是双亲委派模型。</p>
+<p>好了，为了让大家印象深刻，我在给大家描述一下双亲委派模型的工作过程吧：</p>
+<p>它是一个递归调用类加载器的模型，也就是说如果一个类加载器收到了类加载的请求，它首先不会自己去加载这个类，而是不断请求父加载器，如果父加载器可以完成这个加载请求，那么就由父加载器进行加载，如果父加载器不能完成加载请求（它的搜索范围中没有找到所需的类），子加载器才会尝试自己去加载。</p>
+<p>那么使用这种模型有什么好处？</p>
+<p>Java类随着类加载器一起具备了带有优先级的层级关系。例如java.lang.Object，在程序的各种类加载器环境中都是同一个类。</p>
 
     </div>
 
@@ -341,10 +410,10 @@
 ------ 版权信息 ------</div>
  <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
  
- <p><span>本文标题:</span><a href="/Java/JVM%E7%B1%BB%E5%8A%A0%E8%BD%BD%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B/">JVM类加载机制</a></p>
+ <p><span>本文标题:</span><a href="/Java/JVM%E7%B1%BB%E5%8A%A0%E8%BD%BD%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B/">JVM类加载机制（转）</a></p>
  <p><span>文章作者:</span><a href="/" title="访问 且听风雨 的个人博客">且听风雨</a></p>
  <p><span>发布时间:</span>2020年07月12日 - 23:45</p>
- <p><span>原始链接:</span><a href="/Java/JVM%E7%B1%BB%E5%8A%A0%E8%BD%BD%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B/" title="JVM类加载机制">http://sunze.ltd/Java/JVM%E7%B1%BB%E5%8A%A0%E8%BD%BD%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B/</a>
+ <p><span>原始链接:</span><a href="/Java/JVM%E7%B1%BB%E5%8A%A0%E8%BD%BD%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B/" title="JVM类加载机制（转）">http://sunze.ltd/Java/JVM%E7%B1%BB%E5%8A%A0%E8%BD%BD%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B/</a>
     <span class="copy-path"  title="点击复制文章链接"><i class="fa fa-clipboard" data-clipboard-text="http://sunze.ltd/Java/JVM%E7%B1%BB%E5%8A%A0%E8%BD%BD%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B/"  aria-label="复制成功！"></i></span>
  </p>
  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>  
@@ -423,7 +492,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#测试跨域的文件"><span class="nav-number">2.</span> <span class="nav-text">测试跨域的文件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CrossOrigin-注解"><span class="nav-number">3.</span> <span class="nav-text">@CrossOrigin 注解</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#测试"><span class="nav-number">3.1.</span> <span class="nav-text">测试</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#重写WebMvcConfigurer的addCorsMappings-方法。"><span class="nav-number">4.</span> <span class="nav-text">重写WebMvcConfigurer的addCorsMappings 方法。</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Filter"><span class="nav-number">5.</span> <span class="nav-text">Filter</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#番外"><span class="nav-number">6.</span> <span class="nav-text">番外</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#类的生命周期"><span class="nav-number">2.</span> <span class="nav-text">类的生命周期</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#类加载的过程"><span class="nav-number">3.</span> <span class="nav-text">类加载的过程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#加载"><span class="nav-number">3.1.</span> <span class="nav-text">加载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#验证"><span class="nav-number">3.2.</span> <span class="nav-text">验证</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
